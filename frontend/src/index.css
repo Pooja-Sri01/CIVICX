@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-canvas text-civic-dark antialiased font-sans selection:bg-lime selection:text-civic-dark;
+    background-color: #EDEEF5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight text-civic-dark;
+  }
+}
+
+@layer utilities {
+  /* Precision Instrument Surfaces */
+  .instrument-surface {
+    background: #FFFFFF;
+    border: 1px solid #E2E4EB;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 2px 8px rgba(0, 0, 0, 0.03);
+  }
+
+  .instrument-surface-dark {
+    background: #1A1A1A;
+    color: #FFFFFF;
+    border: 1px solid #2A2A2A;
+  }
+
+  .instrument-panel {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(8px);
+    border: 1px solid #E2E4EB;
+  }
+
+  .instrument-border {
+    border-color: #E2E4EB;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #EDEEF5;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+}
+
+/* Custom leaflet container resets */
+.leaflet-container {
+  font-family: inherit;
+  background-color: #EDEEF5 !important;
+}
+
+.custom-risk-pin {
+  background: transparent;
+  border: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+}
