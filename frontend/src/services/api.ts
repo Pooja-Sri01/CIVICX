@@ -15,8 +15,10 @@ import { INITIAL_ASSETS, DEMO_SUMMARY } from '../data/seedData';
 
 import { calculateRiskScore, runBudgetOptimization, simulateAssetTrajectory } from '../utils/calculations';
 
-const VITE_API = (import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '').trim();
+const metaEnv = (import.meta as unknown as { env?: { VITE_API_URL?: string; VITE_API_BASE_URL?: string } }).env || {};
+const VITE_API = (metaEnv.VITE_API_URL || metaEnv.VITE_API_BASE_URL || '').trim();
 const API_BASE = VITE_API ? `${VITE_API.replace(/\/+$/, '')}/api` : '/api';
+
 
 
 export interface RiskDistributionData {
