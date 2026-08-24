@@ -6,13 +6,17 @@ import {
   Filter, 
   Search, 
   RotateCcw, 
-  ArrowRight
+  ArrowRight,
+  X,
+  Layers,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { ApiService } from '../services/api';
 import { Asset } from '../types';
 import { formatINR } from '../utils/formatters';
+import { AssetDecisionChain } from '../components/common/AssetDecisionChain';
 
 export const MapPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +33,7 @@ export const MapPage: React.FC = () => {
   const [selectedType, setSelectedType] = useState('All');
   const [selectedCriticality, setSelectedCriticality] = useState('All');
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -88,9 +93,10 @@ export const MapPage: React.FC = () => {
 
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
+      subdomains: 'abcd',
     }).addTo(map);
 
     markersLayerRef.current = L.layerGroup().addTo(map);
@@ -211,31 +217,55 @@ export const MapPage: React.FC = () => {
           </div>
         </div>
 
-        <button
-          id="btn-inspect-${asset.id}"
-          style="
-            width: 100%;
-            padding: 8px 12px;
-            border-radius: 10px;
-            background: #1A1A1A;
-            color: #FFFFFF;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-          "
-        >
-          <span>View Asset Intelligence →</span>
-        </button>
+        <div style="display: flex; gap: 6px;">
+          <button
+            id="btn-chain-${asset.id}"
+            style="
+              flex: 1;
+              padding: 8px 6px;
+              border-radius: 10px;
+              background: #9FFF00;
+              color: #1A1A1A;
+              font-size: 10px;
+              font-weight: 800;
+              font-family: monospace;
+              cursor: pointer;
+              border: 1px solid #7ACC00;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            DECISION CHAIN
+          </button>
+          <button
+            id="btn-inspect-${asset.id}"
+            style="
+              flex: 1;
+              padding: 8px 6px;
+              border-radius: 10px;
+              background: #1A1A1A;
+              color: #FFFFFF;
+              font-size: 10px;
+              font-weight: 700;
+              cursor: pointer;
+              border: none;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            DETAILS →
+          </button>
+        </div>
       `;
 
       marker.bindPopup(popupContent);
       marker.on('popupopen', () => {
+        const btnChain = document.getElementById(`btn-chain-${asset.id}`);
+        if (btnChain) {
+          btnChain.onclick = () => setSelectedAsset(asset);
+        }
         const btn = document.getElementById(`btn-inspect-${asset.id}`);
         if (btn) {
           btn.onclick = () => navigate(`/assets/${asset.id}`);
@@ -423,6 +453,41 @@ export const MapPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 5. Slide-Out Decision Chain Drawer */}
+      <AnimatePresence>
+        {selectedAsset && (
+          <motion.div
+            initial={{ opacity: 0, x: 300 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 300 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="absolute top-4 right-4 bottom-4 w-full max-w-md z-[1050] flex flex-col pointer-events-auto"
+          >
+            <div className="relative flex-1 overflow-y-auto rounded-3xl bg-white shadow-2xl border border-zinc-200 p-4">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#9FFF00]" />
+                  <span className="text-xs font-mono font-bold uppercase text-civic-dark">
+                    MAP INSPECTION
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedAsset(null)}
+                  className="w-7 h-7 rounded-full bg-zinc-100 hover:bg-zinc-200 flex items-center justify-center text-zinc-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <AssetDecisionChain
+                assetId={selectedAsset.id}
+                className="!border-0 !p-0 !shadow-none"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

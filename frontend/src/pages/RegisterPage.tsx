@@ -6,9 +6,11 @@ import {
   Lock, 
   Mail, 
   User, 
-  Building, 
+  Building2, 
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Zap,
+  BadgeCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,7 +19,8 @@ export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
 
   const [name, setName] = useState('');
-  const [organization, setOrganization] = useState('');
+  const [organization, setOrganization] = useState('Coimbatore City Corporation');
+  const [role, setRole] = useState('Assistant Executive Engineer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -34,43 +37,48 @@ export const RegisterPage: React.FC = () => {
     }
 
     if (!email.includes('@') || !email.includes('.')) {
-      setError('Please provide a valid email address.');
+      setError('Please provide a valid government email address.');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+      setError('Access key must be at least 6 characters.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError('Access keys do not match.');
       return;
     }
 
     setLoading(true);
-    const success = await register(name, organization, email, password);
+    const success = await register(name, organization, email, password, role);
     setLoading(false);
 
     if (success) {
       navigate('/dashboard');
     } else {
-      setError('Could not create workspace. Please check your inputs.');
+      setError('Could not complete officer registration. Please verify your inputs.');
     }
   };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-canvas flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-lg rounded-3xl bg-white border border-zinc-200 shadow-elevated p-8 sm:p-10 space-y-6">
+      <div className="w-full max-w-xl rounded-3xl bg-white border border-zinc-200 shadow-elevated p-8 sm:p-10 space-y-6">
         <div>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
-            ONBOARDING
-          </span>
-          <h1 className="font-display font-black text-2xl text-civic-dark tracking-tight mt-1">
-            CREATE YOUR CIVICX WORKSPACE
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+              GOVERNMENT ONBOARDING
+            </span>
+            <span className="bg-lime text-civic-dark text-[9px] font-mono font-bold px-2 py-0.5 rounded">
+              OFFICIAL REGISTRATION
+            </span>
+          </div>
+          <h1 className="font-display font-black text-2xl text-civic-dark tracking-tight">
+            REGISTER MUNICIPAL OFFICER
           </h1>
           <p className="text-xs text-zinc-500 mt-1">
-            Provision access to infrastructure risk and budget intelligence tools.
+            Provision authorized credentials to access Coimbatore’s infrastructure decision workspace.
           </p>
         </div>
 
@@ -82,18 +90,34 @@ export const RegisterPage: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-zinc-700 font-mono">
-              FULL NAME
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-zinc-700 font-mono">
+                OFFICER FULL NAME
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Er. K. Vignesh"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime font-mono"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-zinc-700 font-mono">
+                DESIGNATION / ROLE
+              </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. S. Ramanathan"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                placeholder="e.g. Assistant Executive Engineer"
+                className="w-full px-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime font-mono"
                 required
               />
             </div>
@@ -101,23 +125,24 @@ export const RegisterPage: React.FC = () => {
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-zinc-700 font-mono">
-              ORGANIZATION / DEPARTMENT
+              DEPARTMENT / MUNICIPAL BODY
             </label>
             <div className="relative">
-              <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
               <input
                 type="text"
                 value={organization}
                 onChange={(e) => setOrganization(e.target.value)}
-                placeholder="e.g. Coimbatore Municipal Corporation"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime"
+                placeholder="Coimbatore City Corporation"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime font-mono"
+                required
               />
             </div>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-zinc-700 font-mono">
-              MUNICIPAL EMAIL
+              OFFICIAL GOVERNMENT EMAIL
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -125,8 +150,8 @@ export const RegisterPage: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="officer@coimbatore.gov.in"
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime"
+                placeholder="vignesh@coimbatore.gov.in"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime font-mono"
                 required
               />
             </div>
@@ -135,7 +160,7 @@ export const RegisterPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-700 font-mono">
-                PASSWORD
+                ACCESS KEY
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -144,7 +169,7 @@ export const RegisterPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime font-mono"
                   required
                 />
               </div>
@@ -152,7 +177,7 @@ export const RegisterPage: React.FC = () => {
 
             <div className="space-y-1">
               <label className="text-xs font-bold text-zinc-700 font-mono">
-                CONFIRM PASSWORD
+                CONFIRM ACCESS KEY
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -161,7 +186,7 @@ export const RegisterPage: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-50 border border-zinc-200 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-lime font-mono"
                   required
                 />
               </div>
@@ -173,14 +198,14 @@ export const RegisterPage: React.FC = () => {
             disabled={loading}
             className="w-full py-3 px-4 rounded-xl bg-civic-dark text-white text-xs font-bold hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-subtle disabled:opacity-50 font-mono mt-4"
           >
-            <span>{loading ? 'PROVISIONING WORKSPACE…' : 'CREATE ACCOUNT →'}</span>
+            <span>{loading ? 'AUTHORIZING OFFICER…' : 'COMPLETE REGISTRATION & ENTER COMMAND CENTER →'}</span>
           </button>
         </form>
 
         <div className="text-center pt-2 text-xs text-zinc-500 font-medium">
-          Already have an account?{' '}
+          Already have official municipal credentials?{' '}
           <Link to="/login" className="font-bold text-civic-dark hover:underline font-mono">
-            SIGN IN →
+            OFFICER SIGN IN →
           </Link>
         </div>
       </div>

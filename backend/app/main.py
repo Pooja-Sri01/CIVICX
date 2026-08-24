@@ -1,4 +1,9 @@
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env if present
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -13,7 +18,9 @@ from backend.app.api.routes import (
     risk,
     budget,
     simulation,
-    inspection
+    inspection,
+    reports,
+    copilot
 )
 from backend.seed.seed_runner import seed_database
 
@@ -41,24 +48,42 @@ app = FastAPI(
 )
 
 # CORS Configuration
-origins = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
+cors_env = os.getenv("CORS_ORIGINS", "").strip()
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+    "http://localhost:3000",
+]
+if cors_env and cors_env != "*":
+    for o in cors_env.split(","):
+        if o.strip() and o.strip() not in allowed_origins:
+            allowed_origins.append(o.strip())
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins != ["*"] else ["*"],
+    allow_origins=["*"] if cors_env == "*" else allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app" if cors_env != "*" else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount all modular REST endpoints under /api
+
+# Mount all modular REST endpoints under /api (specific routes before parameterized wildcards)
 app.include_router(health.router, prefix="/api")
-app.include_router(assets.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
 app.include_router(priorities.router, prefix="/api")
 app.include_router(risk.router, prefix="/api")
 app.include_router(budget.router, prefix="/api")
 app.include_router(simulation.router, prefix="/api")
 app.include_router(inspection.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
+app.include_router(copilot.router, prefix="/api")
+app.include_router(assets.router, prefix="/api")
+
+
 
 @app.get("/")
 def root():

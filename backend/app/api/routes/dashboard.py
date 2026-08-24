@@ -159,3 +159,91 @@ def get_risk_distribution(db: Session = Depends(get_db)):
         "low_count": low,
         "historical_trend_summary": f"{round((critical + high)/total * 100, 1)}% of monitored city infrastructure exhibits high or critical degradation needing immediate preventative intervention."
     }
+
+
+@router.get("/dashboard/data-health")
+def get_data_health(db: Session = Depends(get_db)):
+    """
+    Returns data quality and freshness metrics across the monitored asset portfolio.
+    Shows which assets have recent inspections, outdated data, or missing records.
+    """
+    import datetime as dt_module
+    assets = db.query(Asset).all()
+    total = len(assets)
+    if total == 0:
+        return {
+            "total_assets": 0,
+            "recent_inspections": 0,
+            "moderate_age_inspections": 0,
+            "outdated_inspections": 0,
+            "missing_inspection_date": 0,
+            "missing_damage_type": 0,
+            "assets_with_maintenance_records": 0,
+            "assets_without_maintenance_records": 0,
+            "data_freshness_pct": 0.0,
+            "health_score": 0.0,
+            "summary": "No assets in the system."
+        }
+
+    today = dt_module.date.today()
+    recent = 0       # inspected within 30 days
+    moderate = 0     # 30–90 days
+    outdated = 0     # >90 days
+    missing_date = 0
+    missing_damage = 0
+    has_maintenance = 0
+
+    for a in assets:
+        # Inspection date freshness
+        if not a.last_inspection_date:
+            missing_date += 1
+        else:
+            try:
+                # Handle both string dates (YYYY-MM-DD) and simple year strings
+                date_str = str(a.last_inspection_date).strip()
+                if len(date_str) == 10:
+                    insp_date = dt_module.date.fromisoformat(date_str)
+                elif len(date_str) == 4:
+                    insp_date = dt_module.date(int(date_str), 1, 1)
+                else:
+                    insp_date = dt_module.date.fromisoformat(date_str[:10])
+                days_ago = (today - insp_date).days
+                if days_ago <= 30:
+                    recent += 1
+                elif days_ago <= 90:
+                    moderate += 1
+                else:
+                    outdated += 1
+            except (ValueError, TypeError):
+                missing_date += 1
+
+        # Data completeness checks
+        if not a.damage_type or a.damage_type.strip() == "":
+            missing_damage += 1
+        if a.maintenance_records and len(a.maintenance_records) > 0:
+            has_maintenance += 1
+
+    no_maintenance = total - has_maintenance
+    data_freshness_pct = round((recent + moderate) / total * 100.0, 1)
+    health_score = round(
+        (recent * 1.0 + moderate * 0.6 + outdated * 0.1) / total * 100.0, 1
+    )
+
+    return {
+        "total_assets": total,
+        "recent_inspections": recent,
+        "moderate_age_inspections": moderate,
+        "outdated_inspections": outdated,
+        "missing_inspection_date": missing_date,
+        "missing_damage_type": missing_damage,
+        "assets_with_maintenance_records": has_maintenance,
+        "assets_without_maintenance_records": no_maintenance,
+        "data_freshness_pct": data_freshness_pct,
+        "health_score": health_score,
+        "summary": (
+            f"Data Health: {data_freshness_pct}% of assets have inspections within 90 days. "
+            f"{missing_date} assets lack inspection dates. "
+            f"{no_maintenance} assets have no maintenance history on record."
+        )
+    }
+

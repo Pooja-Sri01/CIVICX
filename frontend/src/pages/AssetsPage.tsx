@@ -65,29 +65,33 @@ export const AssetsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-civic-border">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display font-extrabold text-2xl sm:text-3xl text-civic-dark tracking-tight">
-              Municipal Asset Intelligence Catalogue
+          <div className="flex items-center gap-2.5">
+            <h1 className="font-display font-black text-2xl sm:text-3xl text-civic-dark tracking-tight">
+              ASSET RISK INTELLIGENCE
             </h1>
-            <span className="bg-zinc-200 text-zinc-800 text-xs font-bold font-mono px-2 py-0.5 rounded-full">
+            <span className="bg-lime text-civic-dark text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded font-mono">
+              STAGE 3: EXPLAINABLE RISK
+            </span>
+            <span className="bg-zinc-200 text-zinc-800 text-xs font-bold font-mono px-2.5 py-0.5 rounded-full">
               {filtered.length} Assets
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1">
-            Complete inventory of monitored roads, bridges, flyovers, and drainage channels across Coimbatore.
+          <p className="text-xs sm:text-sm text-zinc-500 mt-1 font-medium">
+            Deep 6-factor multi-criteria risk assessments, physical condition telemetry, and failure degradation models across Coimbatore.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Link
             to="/map"
-            className="px-4 py-2 rounded-xl bg-civic-dark text-white text-xs font-semibold hover:bg-zinc-800 transition-all shadow-subtle flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-civic-dark text-white text-xs font-semibold hover:bg-zinc-800 transition-all shadow-subtle flex items-center gap-1.5 font-mono"
           >
             <MapPin className="w-3.5 h-3.5 text-lime" />
             <span>Switch to Map View</span>
           </Link>
         </div>
       </div>
+
 
       {/* Filter Ribbon */}
       <div className="glass-panel p-4 rounded-2xl border border-civic-border shadow-subtle space-y-3">

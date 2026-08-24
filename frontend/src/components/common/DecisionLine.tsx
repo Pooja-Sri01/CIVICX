@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 
 export type DecisionStage = 'DATA' | 'DETECT' | 'RISK' | 'PRIORITIZE' | 'OPTIMIZE' | 'SIMULATE' | 'ACTION';
@@ -8,20 +9,21 @@ interface DecisionLineProps {
   className?: string;
 }
 
-const STAGES: { id: DecisionStage; label: string }[] = [
-  { id: 'DATA', label: 'DATA' },
-  { id: 'DETECT', label: 'DETECT' },
-  { id: 'RISK', label: 'RISK' },
-  { id: 'PRIORITIZE', label: 'PRIORITIZE' },
-  { id: 'OPTIMIZE', label: 'OPTIMIZE' },
-  { id: 'SIMULATE', label: 'SIMULATE' },
-  { id: 'ACTION', label: 'ACTION' },
+const STAGES: { id: DecisionStage; label: string; route: string; description: string }[] = [
+  { id: 'DATA', label: 'DATA', route: '/dashboard', description: 'Command Center & Citywide Telemetry' },
+  { id: 'DETECT', label: 'DETECT', route: '/map', description: 'GIS Risk Map & Defect Localization' },
+  { id: 'RISK', label: 'RISK', route: '/assets', description: 'Explainable Multi-Criteria Risk & Asset Intelligence' },
+  { id: 'PRIORITIZE', label: 'PRIORITIZE', route: '/priorities', description: 'Priority Queue & Ranked Infrastructure' },
+  { id: 'OPTIMIZE', label: 'OPTIMIZE', route: '/budget', description: 'MCDA Knapsack Budget Optimizer' },
+  { id: 'SIMULATE', label: 'SIMULATE', route: '/simulation', description: 'City Time Machine & Delay Deterioration' },
+  { id: 'ACTION', label: 'ACTION', route: '/reports', description: 'Decision Reports & Stakeholder Briefs' },
 ];
 
 export const DecisionLine: React.FC<DecisionLineProps> = ({
   activeStage = 'DATA',
   className = '',
 }) => {
+  const navigate = useNavigate();
   const activeIndex = STAGES.findIndex((s) => s.id === activeStage);
 
   return (
@@ -40,23 +42,25 @@ export const DecisionLine: React.FC<DecisionLineProps> = ({
           className="absolute top-1/2 left-0 h-px bg-civic-dark -translate-y-1/2 z-0"
         />
 
-        {/* Stage Nodes */}
+        {/* Stage Nodes - Interactive & Clickable */}
         {STAGES.map((stage, idx) => {
           const isActive = stage.id === activeStage;
           const isPassed = idx < activeIndex;
 
           return (
-            <div
+            <button
               key={stage.id}
-              className="relative z-10 flex flex-col items-center group cursor-default"
+              onClick={() => navigate(stage.route)}
+              title={`${stage.label}: ${stage.description}`}
+              className="relative z-10 flex flex-col items-center group cursor-pointer focus:outline-none transition-transform hover:scale-110"
             >
               <div
                 className={`w-2.5 h-2.5 rounded-full transition-all duration-300 flex items-center justify-center ${
                   isActive
                     ? 'bg-civic-dark ring-4 ring-lime ring-offset-1 scale-125'
                     : isPassed
-                    ? 'bg-civic-dark'
-                    : 'bg-zinc-300 border border-white'
+                    ? 'bg-civic-dark group-hover:ring-2 group-hover:ring-zinc-400'
+                    : 'bg-zinc-300 border border-white group-hover:bg-zinc-400'
                 }`}
               >
                 {isActive && <div className="w-1 h-1 rounded-full bg-lime" />}
@@ -67,13 +71,13 @@ export const DecisionLine: React.FC<DecisionLineProps> = ({
                   isActive
                     ? 'font-bold text-civic-dark'
                     : isPassed
-                    ? 'font-medium text-zinc-600'
-                    : 'text-zinc-400 font-normal'
+                    ? 'font-medium text-zinc-700 group-hover:text-civic-dark'
+                    : 'text-zinc-400 font-normal group-hover:text-zinc-700'
                 }`}
               >
                 {stage.label}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>

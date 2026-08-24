@@ -7,13 +7,13 @@ classifies into LOW, MEDIUM, HIGH, CRITICAL, and outputs explainable factor impa
 from typing import Dict, Any, List, Union
 
 class RiskEngine:
-    # Deterministic Multi-Criteria Decision Analysis (MCDA) Weights
-    WEIGHT_CONDITION = 0.25
-    WEIGHT_DAMAGE_SEVERITY = 0.25
-    WEIGHT_CRITICALITY = 0.20
-    WEIGHT_USAGE = 0.15
-    WEIGHT_HISTORICAL_DETERIORATION = 0.10
-    WEIGHT_ENVIRONMENTAL_EXPOSURE = 0.05
+    # Deterministic Multi-Criteria Decision Analysis (MCDA) Weights (Total = 1.00 / 100%)
+    WEIGHT_CONDITION = 0.30                     # 30% Structural Condition Deficit
+    WEIGHT_DAMAGE_SEVERITY = 0.25              # 25% Damage Severity
+    WEIGHT_USAGE = 0.15                        # 15% Traffic Load / Urban Transit Density
+    WEIGHT_CRITICALITY = 0.15                  # 15% Route Criticality
+    WEIGHT_ENVIRONMENTAL_EXPOSURE = 0.10       # 10% Monsoon / Hydrological Hydro-Stress
+    WEIGHT_HISTORICAL_DETERIORATION = 0.05     # 5% Historical Deterioration Trend Signal
 
     CRITICALITY_MAP = {
         "LOW": 30.0,
@@ -84,46 +84,59 @@ class RiskEngine:
         factors = [
             {
                 "factor": "Condition Deficit",
+                "factor_value": condition_deficit,
+                "weight_pct": 30,
                 "impact": get_impact(c_contrib, cls.WEIGHT_CONDITION),
                 "score_contribution": round(c_contrib, 1),
-                "description": f"Condition score evaluated at {c}/100."
+                "description": f"Condition score evaluated at {c}/100 (Deficit: {condition_deficit}/100)."
             },
             {
                 "factor": "Damage Severity",
+                "factor_value": d,
+                "weight_pct": 25,
                 "impact": get_impact(d_contrib, cls.WEIGHT_DAMAGE_SEVERITY),
                 "score_contribution": round(d_contrib, 1),
                 "description": f"Physical damage severity indexed at {d}/100."
             },
             {
-                "factor": "Network Criticality",
-                "impact": get_impact(k_contrib, cls.WEIGHT_CRITICALITY),
-                "score_contribution": round(k_contrib, 1),
-                "description": f"Strategic route importance ranked as {criticality}."
-            },
-            {
-                "factor": "Usage & Traffic Density",
+                "factor": "Traffic Load",
+                "factor_value": u,
+                "weight_pct": 15,
                 "impact": get_impact(u_contrib, cls.WEIGHT_USAGE),
                 "score_contribution": round(u_contrib, 1),
                 "description": f"Traffic exposure index at {u}/100."
             },
             {
-                "factor": "Historical Deterioration",
-                "impact": get_impact(h_contrib, cls.WEIGHT_HISTORICAL_DETERIORATION),
-                "score_contribution": round(h_contrib, 1),
-                "description": f"Annualized deterioration rate recorded at {h}%/year."
+                "factor": "Route Criticality",
+                "factor_value": round(k, 1),
+                "weight_pct": 15,
+                "impact": get_impact(k_contrib, cls.WEIGHT_CRITICALITY),
+                "score_contribution": round(k_contrib, 1),
+                "description": f"Strategic route importance ranked as {criticality} ({round(k, 1)}/100)."
             },
             {
-                "factor": "Environmental Exposure",
+                "factor": "Hydro/Monsoon Stress",
+                "factor_value": round(e, 1),
+                "weight_pct": 10,
                 "impact": get_impact(e_contrib, cls.WEIGHT_ENVIRONMENTAL_EXPOSURE),
                 "score_contribution": round(e_contrib, 1),
-                "description": f"Hydrological and weather stress factor at {e}/100."
+                "description": f"Hydrological and weather monsoon stress factor at {round(e, 1)}/100."
+            },
+            {
+                "factor": "Deterioration Signal",
+                "factor_value": round(h, 1),
+                "weight_pct": 5,
+                "impact": get_impact(h_contrib, cls.WEIGHT_HISTORICAL_DETERIORATION),
+                "score_contribution": round(h_contrib, 1),
+                "description": f"Normalized historical deterioration signal indexed at {round(h, 1)}/100."
             }
+
         ]
 
         explanation = (
             f"Asset classified as {risk_level} risk (score: {risk_score}/100). "
-            f"Primary risk drivers: {'Condition Deficit' if c_contrib > 15 else 'Damage Severity'} "
-            f"and {'Critical Network Importance' if k_contrib > 15 else 'Traffic Loading'}."
+            f"Primary risk drivers: {'Condition Deficit' if c_contrib >= d_contrib else 'Damage Severity'} "
+            f"and {'Route Criticality' if k_contrib >= u_contrib else 'Traffic Loading'}."
         )
 
         return {
@@ -132,3 +145,4 @@ class RiskEngine:
             "factors": factors,
             "explanation": explanation
         }
+
