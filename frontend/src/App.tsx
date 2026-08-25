@@ -15,6 +15,14 @@ import { PrioritiesPage } from './pages/PrioritiesPage';
 import { BudgetPage } from './pages/BudgetPage';
 import { SimulationPage } from './pages/SimulationPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { CivicReportsPage } from './pages/CivicReportsPage';
+import { CitizenPortalPage } from './pages/citizen/CitizenPortalPage';
+import { CitizenReportPage } from './pages/citizen/CitizenReportPage';
+import { CitizenReportsPage } from './pages/citizen/CitizenReportsPage';
+import { CitizenReportDetailPage } from './pages/citizen/CitizenReportDetailPage';
+import { CitizenRewardsPage } from './pages/citizen/CitizenRewardsPage';
+import { CitizenLeaderboardPage } from './pages/citizen/CitizenLeaderboardPage';
+import { CitizenImpactPage } from './pages/citizen/CitizenImpactPage';
 
 export function App() {
   return (
@@ -22,13 +30,28 @@ export function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<AppLayout />}>
-            {/* Public Routes */}
+            {/* Public Landing & Auth Routes */}
             <Route index element={<LandingPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
 
-            {/* Protected Decision Intelligence Routes */}
+            {/* Public Citizen Civic Intelligence Layer */}
+            <Route path="citizen" element={<CitizenPortalPage />} />
+            <Route path="citizen/portal" element={<CitizenPortalPage />} />
+            <Route path="citizen/report" element={<CitizenReportPage />} />
+            <Route path="citizen/reports" element={<CitizenReportsPage />} />
+            <Route path="citizen/my-reports" element={<CitizenReportsPage />} />
+            <Route path="citizen/report/:reportId" element={<CitizenReportDetailPage />} />
+            <Route path="citizen/reports/:reportId" element={<CitizenReportDetailPage />} />
+            <Route path="citizen/rewards" element={<CitizenRewardsPage />} />
+            <Route path="citizen/leaderboard" element={<CitizenLeaderboardPage />} />
+            <Route path="citizen/impact" element={<CitizenImpactPage />} />
+
+            {/* Public / Semi-protected GIS Map */}
+            <Route path="map" element={<MapPage />} />
+
+            {/* Protected Decision Intelligence Government Routes */}
             <Route
               path="dashboard"
               element={
@@ -50,14 +73,6 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <AssetDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="map"
-              element={
-                <ProtectedRoute>
-                  <MapPage />
                 </ProtectedRoute>
               }
             />
@@ -90,6 +105,22 @@ export function App() {
               element={
                 <ProtectedRoute>
                   <ReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="civic-reports"
+              element={
+                <ProtectedRoute>
+                  <CivicReportsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="actions"
+              element={
+                <ProtectedRoute>
+                  <CivicReportsPage />
                 </ProtectedRoute>
               }
             />

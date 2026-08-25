@@ -33,7 +33,8 @@ import {
   Compass,
   Map as MapIcon,
   ShieldCheck,
-  Check
+  Check,
+  PlusCircle
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -251,9 +252,9 @@ export const LandingPage: React.FC = () => {
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs font-mono text-blue-700 shadow-sm"
             >
               <Zap className="w-3.5 h-3.5 text-blue-600" />
-              <span className="font-bold tracking-wide">DECISION INTELLIGENCE 2.0</span>
+              <span className="font-bold tracking-wide">DECISION & CITIZEN INTELLIGENCE 2.0</span>
               <span className="text-blue-300">•</span>
-              <span className="text-slate-600 font-normal">Coimbatore Smart City Pilot</span>
+              <span className="text-slate-600 font-normal">Coimbatore Smart City</span>
             </motion.div>
 
             {/* Smart City Headline */}
@@ -263,9 +264,10 @@ export const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="font-display font-black text-4xl sm:text-6xl text-slate-900 tracking-tight leading-[1.08]"
             >
-              Autonomous Infrastructure <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-600">
-                Risk & Digital Twin Platform
+              PREDICT THE RISK. <br />
+              PRIORITIZE THE FIX. <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">
+                LISTEN TO THE CITY.
               </span>
             </motion.h1>
 
@@ -276,10 +278,10 @@ export const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-base sm:text-lg text-slate-600 max-w-xl font-normal leading-relaxed"
             >
-              Transform municipal inspection data, RDD2022-compatible AI vision telemetry, and field surveys into explainable 6-factor MCDA risk rankings, greedy knapsack budget allocation, and multi-year decay curve forecasting.
+              CIVICX connects municipal infrastructure intelligence with citizen observations to help cities identify, prioritize, and resolve problems.
             </motion.p>
 
-            {/* Action Group */}
+            {/* Dual Primary CTAs */}
             <motion.div 
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
@@ -288,19 +290,19 @@ export const LandingPage: React.FC = () => {
             >
               <Link
                 to="/dashboard"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-display font-bold text-sm transition-all shadow-md shadow-blue-500/25 group"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl bg-civic-dark hover:bg-zinc-800 text-white font-display font-bold text-sm transition-all shadow-md group"
               >
-                <span>Launch Command Center</span>
-                <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
+                <span>GOVERNMENT COMMAND CENTER</span>
+                <ArrowRight className="w-4 h-4 text-lime group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              <a
-                href="#corridor-inspector"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-sm font-semibold text-slate-800 transition-all shadow-sm"
+              <Link
+                to="/citizen/report"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-mono font-bold transition-all shadow-md shadow-purple-500/20"
               >
-                <Crosshair className="w-4 h-4 text-blue-600" />
-                <span>Inspect Digital Twin Corridor</span>
-              </a>
+                <MapPin className="w-4 h-4 text-white" />
+                <span>CITIZEN REPORT AN ISSUE</span>
+              </Link>
             </motion.div>
 
             {/* Live City KPIs Grid */}
@@ -857,37 +859,133 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Bottom Launch Call to Action Banner */}
+      {/* Hackathon Hero Story Section */}
+      <section className="py-20 bg-white border-y border-slate-200 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 font-mono text-xs font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>THE CIVICX TWO-SIDED REVOLUTION</span>
+            </div>
+            <h2 className="font-display font-black text-3xl sm:text-4xl text-slate-900">
+              FROM CITIZEN OBSERVATION TO MUNICIPAL ACTION
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+              Citizens don't just complain — they become structured evidence contributors. CIVICX converts distributed citizen observations into geocoded digital twin intelligence that directly informs municipal risk and budgeting.
+            </p>
+          </div>
+
+          {/* 5-Step Citizen-to-Action Cycle */}
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3.5 font-mono">
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-center">
+              <span className="text-xl">🔍</span>
+              <p className="text-xs font-bold text-slate-900">1. VALIDATE</p>
+              <p className="text-[10px] text-slate-500 font-sans">7-signal screening tests photo, geo & duplicate validity.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-center">
+              <span className="text-xl">📊</span>
+              <p className="text-xs font-bold text-slate-900">2. PRIORITIZE</p>
+              <p className="text-[10px] text-slate-500 font-sans">Correlates with 78 monitored assets & 6-factor MCDA risk.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-center">
+              <span className="text-xl">👷</span>
+              <p className="text-xs font-bold text-slate-900">3. ACT</p>
+              <p className="text-[10px] text-slate-500 font-sans">Municipal engineers dispatch zonal work orders.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1 text-center">
+              <span className="text-xl">✅</span>
+              <p className="text-xs font-bold text-slate-900">4. RESOLVE</p>
+              <p className="text-[10px] text-slate-500 font-sans">Field repair verified with before-and-after photo logs.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-lime/20 border border-lime text-civic-dark space-y-1 text-center font-bold">
+              <span className="text-xl">🪙</span>
+              <p className="text-xs font-bold">5. REWARD</p>
+              <p className="text-[10px] text-civic-dark font-sans font-normal">Citizens earn +250 CIVICX Points for verified fixes.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* LISTEN. REPORT. IMPROVE. (Citizen Decision Feedback Section) */}
+      <section className="py-16 bg-[#EDEEF5] border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto rounded-3xl bg-white border border-slate-300 p-8 sm:p-12 shadow-sm text-center space-y-6">
+          <div className="space-y-2 max-w-2xl mx-auto">
+            <span className="text-xs font-mono font-bold tracking-widest text-purple-700 uppercase">
+              CITIZEN CIVIC INTELLIGENCE
+            </span>
+            <h2 className="font-display font-black text-3xl sm:text-4xl text-slate-900 tracking-tight">
+              LISTEN. REPORT. IMPROVE.
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 font-sans leading-relaxed">
+              "Citizens become evidence contributors to the city's infrastructure decision system."
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 font-mono text-xs font-bold">
+            <span className="px-4 py-2 rounded-xl bg-purple-50 text-purple-900 border border-purple-200">
+              REPORT
+            </span>
+            <span className="text-slate-400 font-bold">→</span>
+            <span className="px-4 py-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-200">
+              VALIDATE
+            </span>
+            <span className="text-slate-400 font-bold">→</span>
+            <span className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200">
+              RESOLVE
+            </span>
+            <span className="text-slate-400 font-bold">→</span>
+            <span className="px-4 py-2 rounded-xl bg-lime text-civic-dark border border-lime shadow-xs">
+              REWARD
+            </span>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              to="/citizen/report"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs font-bold transition-all shadow-md shadow-purple-500/20"
+            >
+              <PlusCircle className="w-4 h-4 text-white" />
+              <span>REPORT A CIVIC ISSUE</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom Launch Call to Action Banner with Dual Primary Paths */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 text-white rounded-2xl p-8 sm:p-12 text-center relative overflow-hidden shadow-2xl">
+        <div className="bg-gradient-to-br from-slate-900 via-zinc-900 to-slate-800 text-white rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden shadow-2xl border border-white/10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 border border-white/20 text-white font-mono text-xs font-semibold mb-4 backdrop-blur-md">
-            <Building2 className="w-3.5 h-3.5" />
-            <span>COIMBATORE MUNICIPAL CORPORATION PILOT</span>
+            <Building2 className="w-3.5 h-3.5 text-lime" />
+            <span>COIMBATORE MUNICIPAL CORPORATION DECISION PLATFORM</span>
           </div>
 
           <h2 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight leading-tight">
-            Ready to Explore the Smart City Command Center?
+            Choose Your CIVICX Portal
           </h2>
 
-          <p className="text-sm sm:text-base text-blue-100 max-w-xl mx-auto mt-3 mb-8 leading-relaxed">
-            Gain immediate spatial visibility across 78 geocoded infrastructure assets, execute knapsack capital optimization, and simulate non-linear decay horizons.
+          <p className="text-sm sm:text-base text-zinc-300 max-w-xl mx-auto mt-3 mb-8 leading-relaxed font-sans">
+            Whether evaluating municipal multi-crore infrastructure capital budgets or reporting a neighborhood road defect, CIVICX unifies the city.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/dashboard"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-display font-bold text-sm transition-all shadow-lg group"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-lime hover:bg-lime-400 text-civic-dark font-display font-bold text-sm transition-all shadow-lime-glow group"
             >
-              <span>Enter Municipal Command Center</span>
+              <span>GOVERNMENT COMMAND CENTER</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
 
             <Link
-              to="/map"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold text-sm transition-all backdrop-blur-md"
+              to="/citizen"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-mono font-bold text-sm transition-all backdrop-blur-md"
             >
-              <MapIcon className="w-4 h-4 text-emerald-300" />
-              <span>Open Spatial Risk Map</span>
+              <PlusCircle className="w-4 h-4 text-purple-300" />
+              <span>CITIZEN INTELLIGENCE PORTAL</span>
             </Link>
           </div>
         </div>

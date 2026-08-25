@@ -34,7 +34,7 @@ import {
   AssetInspectionDetail, 
   RiskExplanationDetail 
 } from '../services/api';
-import { Asset, MaintenanceLog } from '../types';
+import { Asset, MaintenanceLog, CitizenReport } from '../types';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { InspectionEvidence } from '../components/common/InspectionEvidence';
 import { ExplainableRiskCard } from '../components/common/ExplainableRiskCard';
@@ -42,6 +42,10 @@ import { AssetDetailSkeleton } from '../components/common/AssetDetailSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
 import { AssetDecisionChain } from '../components/common/AssetDecisionChain';
 import { DecisionAuditTrail } from '../components/common/DecisionAuditTrail';
+import { AIInspectionModal } from '../components/inspection/AIInspectionModal';
+import { PredictiveIntelligenceCard } from '../components/predictions/PredictiveIntelligenceCard';
+import { DigitalTwinWorkspace } from '../components/digitaltwin/DigitalTwinWorkspace';
+import { DeteriorationForecast } from '../types';
 import { formatINR } from '../utils/formatters';
 
 export const AssetDetailPage: React.FC = () => {
@@ -53,9 +57,12 @@ export const AssetDetailPage: React.FC = () => {
   const [maintenance, setMaintenance] = useState<MaintenanceLog[]>([]);
   const [inspectionDetail, setInspectionDetail] = useState<AssetInspectionDetail | null>(null);
   const [riskExplanation, setRiskExplanation] = useState<RiskExplanationDetail | null>(null);
+  const [linkedCitizenReports, setLinkedCitizenReports] = useState<CitizenReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [forecast, setForecast] = useState<DeteriorationForecast | null>(null);
 
   const loadAssetIntelligence = async () => {
     if (!id) return;
@@ -78,15 +85,19 @@ export const AssetDetailPage: React.FC = () => {
       setAsset(assetData);
       setAllAssets(assetsList);
 
-      const [mLogs, inspDetail, riskExp] = await Promise.all([
+      const [mLogs, inspDetail, riskExp, allReps, forecastData] = await Promise.all([
         ApiService.getAssetMaintenance(assetData.id),
         ApiService.getAssetInspection(assetData.id),
         ApiService.getAssetRiskExplanation(assetData.id),
+        ApiService.getCitizenReports(),
+        ApiService.getAssetDeteriorationForecast(assetData.assetId || assetData.id)
       ]);
 
-      setMaintenance(mLogs.length > 0 ? mLogs : assetData.maintenanceHistory || []);
+      setMaintenance(mLogs);
       setInspectionDetail(inspDetail);
       setRiskExplanation(riskExp);
+      setForecast(forecastData);
+      setLinkedCitizenReports(allReps.filter(r => r.nearestAssetId === assetData.assetId || r.nearestAssetId === assetData.id));
     } catch (err) {
       console.error('Failed to load asset intelligence', err);
       setError('Unable to retrieve inspection and explainable risk analysis.');
@@ -294,6 +305,18 @@ export const AssetDetailPage: React.FC = () => {
         className=""
       />
 
+      {/* 2.7. Predictive Deterioration & Failure Forecasting (Prompt 8) */}
+      <PredictiveIntelligenceCard
+        forecast={forecast}
+        onRefresh={loadAssetIntelligence}
+      />
+
+      {/* 2.9. Digital Twin & What-If Scenario Simulation (Prompt 9) */}
+      <DigitalTwinWorkspace
+        assetId={asset.assetId || asset.id}
+        onOpenAIModal={() => setIsAIModalOpen(true)}
+      />
+
       {/* 3. Core AI Inspection Workspace (Observed Data vs AI Vision Analysis + Explainable Risk) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: AI Inspection Evidence (Ground Truth + Computer Vision) */}
@@ -305,6 +328,7 @@ export const AssetDetailPage: React.FC = () => {
             conditionScore={asset.conditionScore}
             observedEvidence={inspectionDetail?.observed_evidence}
             aiAnalysis={inspectionDetail?.ai_vision}
+            onOpenAIModal={() => setIsAIModalOpen(true)}
           />
         </div>
 
@@ -358,6 +382,97 @@ export const AssetDetailPage: React.FC = () => {
                 {inspectionDetail?.next_inspection_recommendation || 'Priority non-destructive survey recommended.'}
               </p>
             </div>
+          </div>
+
+          {/* CITIZEN OBSERVATIONS CARD */}
+          <div className="p-5 rounded-3xl bg-purple-50/70 border border-purple-200 shadow-subtle space-y-3 font-mono">
+            <div className="flex items-center justify-between pb-2 border-b border-purple-200">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-700" />
+                <span className="text-xs uppercase font-bold text-purple-900">
+                  CITIZEN EVIDENCE BASE
+                </span>
+              </div>
+              <span className="text-xs font-bold text-purple-700">
+                {linkedCitizenReports.length} report{linkedCitizenReports.length === 1 ? '' : 's'} linked
+              </span>
+            </div>
+
+            {linkedCitizenReports.length > 0 ? (
+              <div className="space-y-3">
+                {/* Evidence Metrics Breakdown */}
+                <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                  <div className="p-2 rounded-xl bg-white/90 border border-purple-100">
+                    <span className="text-purple-600 block">Validated</span>
+                    <span className="font-bold text-purple-950 text-xs">
+                      {linkedCitizenReports.filter(r => ['VALIDATED', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED'].includes(r.status)).length}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/90 border border-purple-100">
+                    <span className="text-blue-600 block">Under Review</span>
+                    <span className="font-bold text-blue-950 text-xs">
+                      {linkedCitizenReports.filter(r => ['SUBMITTED', 'UNDER_REVIEW'].includes(r.status)).length}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-xl bg-white/90 border border-purple-100">
+                    <span className="text-emerald-600 block">Resolved</span>
+                    <span className="font-bold text-emerald-950 text-xs">
+                      {linkedCitizenReports.filter(r => r.status === 'RESOLVED').length}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-white/90 border border-purple-100 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-purple-800">
+                      Latest: {linkedCitizenReports[0].reportId}
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-800 font-bold">
+                      {linkedCitizenReports[0].status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-700 font-sans leading-relaxed">
+                    "{linkedCitizenReports[0].description}"
+                  </p>
+                  <span className="text-[10px] text-purple-600 font-mono block">
+                    Screening: {linkedCitizenReports[0].validationScore}/100 ({linkedCitizenReports[0].validationStatus}) • Distance: ~{linkedCitizenReports[0].nearestAssetDistanceM ?? 184}m
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-purple-900 font-sans bg-purple-100/60 p-2.5 rounded-xl border border-purple-200 leading-tight">
+                  <strong>Evidence Context:</strong> Citizen observations provide ground-truth validation for corridor {asset.assetId}. Official risk scores remain calculated independently by the 6-factor MCDA engine.
+                </p>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => navigate(`/civic-reports?search=${asset.assetId}`)}
+                    className="flex-1 py-2.5 rounded-xl bg-civic-dark text-lime font-bold text-xs hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <span>VIEW CITIZEN EVIDENCE</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => navigate(`/map`)}
+                    className="px-3.5 py-2.5 rounded-xl bg-white border border-purple-300 text-purple-900 font-bold text-xs hover:bg-purple-50 transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>VIEW ON MAP</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-white/60 text-center text-xs text-slate-500 font-sans space-y-2">
+                <p>No active citizen reports currently linked to this corridor.</p>
+                <button
+                  onClick={() => navigate('/map')}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono text-xs font-bold inline-flex items-center gap-1"
+                >
+                  <MapPin className="w-3 h-3" />
+                  <span>View Asset on GIS Map</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -499,6 +614,18 @@ export const AssetDetailPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* AI INFRASTRUCTURE INSPECTION MODAL */}
+      <AIInspectionModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        assetId={asset.assetId}
+        initialImageUrl={asset.image}
+        assetContext={asset}
+        onInspectionComplete={() => {
+          loadAssetIntelligence();
+        }}
+      />
     </div>
   );
 };

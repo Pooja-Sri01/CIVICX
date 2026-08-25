@@ -209,6 +209,13 @@ export const SimulationPage: React.FC = () => {
           </div>
 
           <Link
+            to={`/assets/${currentAsset.id}#digital-twin`}
+            className="px-3.5 py-2 rounded-xl bg-lime text-civic-dark text-xs font-black hover:bg-lime-light transition-all shadow-subtle flex items-center gap-1.5"
+          >
+            <span>Digital Twin</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+          <Link
             to={`/budget?asset=${currentAsset.id}`}
             className="px-3.5 py-2 rounded-xl bg-white border border-civic-border text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-all shadow-subtle flex items-center gap-1.5"
           >

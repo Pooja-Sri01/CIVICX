@@ -425,5 +425,658 @@ export interface AIDecisionInsightsResponse {
   };
 }
 
+// ============================
+// Citizen Intelligence Types
+// ============================
+
+export type CitizenReportStatus =
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'VALIDATED'
+  | 'PRIORITIZED'
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'RESOLVED'
+  | 'REJECTED'
+  | 'DUPLICATE';
+
+export interface CitizenValidationFactor {
+  signal: string;
+  passed: boolean;
+  score: number;
+  detail: string;
+}
+
+export interface CitizenReport {
+  id: number | string;
+  reportId: string;
+  userId?: number;
+  userName?: string;
+  category: string;
+  description: string;
+  photoUrl?: string;
+  latitude: number;
+  longitude: number;
+  locationName: string;
+  zone?: string;
+  severity: 'Low' | 'Medium' | 'High' | 'Critical';
+  validationScore: number;
+  validationStatus: 'LIKELY VALID' | 'NEEDS REVIEW' | 'DUPLICATE REPORT' | 'LOW CONFIDENCE';
+  validationFactors?: CitizenValidationFactor[];
+  status: CitizenReportStatus;
+  priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  nearestAssetId?: string;
+  nearestAssetDistanceM?: number;
+  assetLinkStatus?: 'NO_ASSET_FOUND' | 'POTENTIAL_MATCH' | 'LINKED' | 'MANUALLY_LINKED' | 'REJECTED';
+  assetLinkConfidence?: number;
+  assetLinkReason?: string;
+  linkedAt?: string;
+  linkedBy?: string;
+  assignedTo?: string;
+  assignedDepartment?: string;
+  assignedEngineer?: string;
+  targetDate?: string;
+  resolutionDescription?: string;
+  resolutionPhoto?: string;
+  resolvedAt?: string;
+  duplicateOfId?: string;
+  actionNotes?: string;
+  events?: CitizenReportEvent[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CivicAssetLink {
+  reportId: string;
+  asset?: {
+    id: number | string;
+    assetId: string;
+    name: string;
+    assetType: string;
+    location: string;
+    zone: string;
+    riskScore: number;
+    riskLevel: string;
+    conditionScore: number;
+    recommendedAction: string;
+    distanceM?: number;
+  } | null;
+  matchStatus: 'NO_ASSET_FOUND' | 'POTENTIAL_MATCH' | 'LINKED' | 'MANUALLY_LINKED' | 'REJECTED';
+  confidence: number;
+  reason: string;
+  distanceM?: number;
+}
+
+export interface AssetEvidenceSummary {
+  assetId: string;
+  totalReports: number;
+  validatedReports: number;
+  underReviewReports: number;
+  inProgressReports: number;
+  resolvedReports: number;
+  commonCategory?: string;
+  latestObservationDate?: string;
+  evidenceContext: string;
+  reports: CitizenReport[];
+}
+
+export interface CitizenReportEvent {
+  id: number;
+  reportId: number;
+  eventType: string;
+  oldStatus?: string;
+  newStatus: string;
+  actorId: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface CivicReportStats {
+  newReports: number;
+  underReview: number;
+  validated: number;
+  assigned: number;
+  inProgress: number;
+  resolved: number;
+  duplicate: number;
+  rejected: number;
+  highRiskLinked?: number;
+  total: number;
+}
+
+export interface CitizenReward {
+  id: number;
+  userId: number;
+  reportId?: number;
+  points: number;
+  reason: string;
+  status: 'EARNED' | 'CREDITED' | 'PENDING' | 'REDEEMED' | 'CANCELLED';
+  createdAt: string;
+}
+
+export interface CategoryContribution {
+  category: string;
+  count: number;
+}
+
+export interface ContributionJourneyEvent {
+  title: string;
+  reportId: string;
+  points: number;
+  date: string;
+}
+
+export interface CitizenImpact {
+  reportsSubmitted: number;
+  reportsValidated: number;
+  issuesResolved: number;
+  roadsImproved: number;
+  infrastructureProtected: number;
+  pointsEarned: number;
+  currentBalance: number;
+  summaryMessage: string;
+  categoriesContributed?: CategoryContribution[];
+  contributionJourney?: ContributionJourneyEvent[];
+}
+
+export interface CivicRewardOption {
+  rewardId: string;
+  title: string;
+  description: string;
+  pointsCost: number;
+  demoValueInr: number;
+  category: string;
+}
+
+export interface CivicPointTransaction {
+  id: number;
+  userId: number;
+  reportId?: number;
+  transactionType: 'EARN' | 'REDEEM' | 'ADJUSTMENT';
+  points: number;
+  balanceAfter: number;
+  reason: string;
+  referenceId: string;
+  createdAt: string;
+}
+
+export interface CitizenWallet {
+  currentBalance: number;
+  lifetimeEarned: number;
+  pending: number;
+  pendingBreakdown?: {
+    waitingForValidation?: number;
+    waitingForMunicipalAction?: number;
+    waitingForResolution?: number;
+  };
+  redeemed: number;
+  rewards: CitizenReward[];
+}
+
+export interface ReportRewardBreakdown {
+  reportId: string;
+  status: string;
+  submissionPoints: number;
+  validationPoints: number;
+  actionPoints: number;
+  resolutionPoints: number;
+  totalEarned: number;
+  rewards: CitizenReward[];
+}
+
+export interface CitizenLeaderboardItem {
+  rank: number;
+  name: string;
+  reportsValidated?: number;
+  issuesResolved?: number;
+  civicxPoints: number;
+  badge: string;
+  avatarColor?: string;
+}
+
+export interface CitizenReportCreateInput {
+  category: string;
+  description: string;
+  photoUrl?: string;
+  latitude: number;
+  longitude: number;
+  locationName?: string;
+  zone?: string;
+  severity?: 'Low' | 'Medium' | 'High' | 'Critical';
+  userName?: string;
+  userEmail?: string;
+}
+
+// ============================================================
+// ENTERPRISE DOMAIN TYPES (PROMPT 1/10)
+// ============================================================
+
+export interface AuditEvent {
+  id: number;
+  eventType: string;
+  entityType: string;
+  entityId: string;
+  actorId: string;
+  actorType: 'CITIZEN' | 'ENGINEER' | 'INSPECTOR' | 'SYSTEM' | 'ADMIN';
+  oldValue?: string | null;
+  newValue?: string | null;
+  metadataJson?: string | null;
+  requestId?: string;
+  timestamp: string;
+}
+
+export interface RiskAssessmentRecord {
+  id: number;
+  assetId: number | string;
+  conditionScore: number;
+  damageScore: number;
+  trafficScore: number;
+  criticalityScore: number;
+  environmentScore: number;
+  deteriorationScore: number;
+  riskScore: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  algorithmVersion: string;
+  calculatedAt: string;
+}
+
+export interface DecisionRecordItem {
+  id: number;
+  assetId: number | string;
+  decisionVersion: string;
+  priorityScore: number;
+  priorityRank: number;
+  recommendedIntervention: string;
+  estimatedCost: number;
+  budgetStatus: string;
+  costOfDelay6m: number;
+  verdict: string;
+  createdAt: string;
+}
+
+export interface RewardLedgerEntry {
+  id: number;
+  userId: number;
+  reportId?: number | null;
+  transactionType: 'EARN' | 'BONUS' | 'REDEEM' | 'REVERSAL';
+  points: number;
+  balanceAfter: number;
+  reason: string;
+  referenceId?: string;
+  createdAt: string;
+}
+
+export interface DataQualityReport {
+  totalAssetsAudited: number;
+  validAssets: number;
+  warningAssets: number;
+  invalidAssets: number;
+  overallHealthScore: number;
+  dataFreshnessPct: number;
+}
+
+export interface TelemetryRecordItem {
+  id: number;
+  sourceId?: number;
+  assetId?: number;
+  metricType: string;
+  value: number;
+  unit: string;
+  qualityScore: number;
+  recordedAt: string;
+}
+
+export interface CivicMapIntelligenceResponse {
+  assets: Array<{
+    id: number;
+    asset_id: string;
+    name: string;
+    type: string;
+    location: string;
+    zone: string;
+    latitude: number;
+    longitude: number;
+    risk_level: string;
+    risk_score: number;
+    condition_score: number;
+    priority: string;
+    recommended_action: string;
+    estimated_repair_cost: number;
+  }>;
+  reports: Array<{
+    id: number;
+    report_id: string;
+    category: string;
+    description: string;
+    photo_url?: string;
+    latitude: number;
+    longitude: number;
+    location_name: string;
+    zone?: string;
+    severity: string;
+    status: string;
+    validation_score: number;
+    validation_status: string;
+    nearest_asset_id?: string;
+    nearest_asset_distance_m?: number;
+    asset_link_status?: string;
+    created_at: string;
+  }>;
+  summary: {
+    total_assets: number;
+    total_reports: number;
+    critical_assets: number;
+    high_risk_assets: number;
+    active_reports: number;
+  };
+}
+
+// ============================================================
+// AI INFRASTRUCTURE INSPECTION TYPES (PROMPT 7)
+// ============================================================
+
+export interface BoundingBoxCoordinates {
+  x: number; // 0-100 percentage
+  y: number; // 0-100 percentage
+  width: number; // 0-100 percentage
+  height: number; // 0-100 percentage
+}
+
+export interface AIDetection {
+  damage_type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  confidence: number; // 0.0 to 1.0
+  bbox: BoundingBoxCoordinates;
+  reason?: string;
+}
+
+export interface AIInspectionFeedback {
+  id: number;
+  inspection_id: number;
+  reviewer_id: string;
+  reviewer_role: string;
+  review_result: 'CONFIRMED' | 'FLAGGED_FOR_MANUAL_REVIEW' | 'DISAGREED';
+  suggested_damage_type?: string;
+  review_notes?: string;
+  created_at: string;
+}
+
+export interface AIInspection {
+  id: number;
+  inspection_id: string;
+  report_id?: string | null;
+  asset_id?: string | null;
+  image_url: string;
+  annotated_image_url?: string;
+  model_name: string;
+  model_version: string;
+  domain: string;
+  damage_type: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  confidence: number;
+  confidence_band: 'HIGH CONFIDENCE' | 'MEDIUM CONFIDENCE' | 'LOW CONFIDENCE';
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'LOW_CONFIDENCE' | 'FAILED';
+  detections: AIDetection[];
+  evidence: string[];
+  summary?: string;
+  disclaimer: string;
+  feedbacks?: AIInspectionFeedback[];
+  created_at: string;
+}
+
+export interface AIInspectionCategoryCount {
+  category: string;
+  count: number;
+  average_confidence: number;
+}
+
+export interface AIInspectionStats {
+  total_images_analyzed: number;
+  high_confidence_count: number;
+  medium_confidence_count: number;
+  low_confidence_count: number;
+  manual_review_flagged: number;
+  model_accuracy_benchmark: string;
+  top_detected_conditions: AIInspectionCategoryCount[];
+}
+
+// ============================================================
+// PREDICTIVE INFRASTRUCTURE DETERIORATION TYPES (PROMPT 8)
+// ============================================================
+
+export interface ForecastHorizonPoint {
+  horizon: string; // "6M", "12M", "24M", "36M"
+  months: number;
+  condition: number;
+  lower_bound: number;
+  upper_bound: number;
+  projected_risk: number;
+  condition_band: 'Good' | 'Fair' | 'Poor' | 'Critical';
+}
+
+export interface DeteriorationForecast {
+  asset_id: string;
+  asset_name?: string;
+  asset_type?: string;
+  model_name: string;
+  model_version: string;
+  prediction_timestamp: string;
+  current_condition: number;
+  current_risk: number;
+  data_quality: 'HIGH' | 'MEDIUM' | 'LOW';
+  is_available: boolean;
+  unavailable_reason?: string | null;
+  recommended_action?: string | null;
+  deterioration_rate: number;
+  trend: 'STABLE' | 'MODERATE' | 'ACCELERATING';
+  forecast: ForecastHorizonPoint[];
+  critical_threshold_crossing: string;
+  maintenance_window: string;
+  maintenance_urgency?: string;
+  evidence_chain: string[];
+  decision_disclaimer: string;
+}
+
+export interface PredictiveSummary {
+  total_assets_evaluated: number;
+  accelerating_count: number;
+  critical_under_12m: number;
+  maintenance_under_6m: number;
+  low_data_confidence_count: number;
+  avg_projected_loss_12m: number;
+  risk_mitigation_window_breakdown: Record<string, number>;
+}
+
+export interface PredictivePriorityItem {
+  asset_id: string;
+  asset_name: string;
+  asset_type: string;
+  zone: string;
+  current_risk: number;
+  risk_level: string;
+  current_condition: number;
+  forecast_12m: number;
+  trend: 'STABLE' | 'MODERATE' | 'ACCELERATING';
+  maintenance_window: string;
+  priority_rank: number;
+}
+
+// ============================================================
+// DIGITAL TWIN & WHAT-IF SIMULATION TYPES (PROMPT 9)
+// ============================================================
+
+export type LifecycleStage = 'PLANNING' | 'CONSTRUCTION' | 'OPERATION' | 'INSPECTION' | 'MAINTENANCE' | 'REHABILITATION' | 'RENEWAL';
+export type ScenarioInterventionType = 'DO_NOTHING' | 'ROUTINE_MAINTENANCE' | 'PREVENTIVE_MAINTENANCE' | 'REHABILITATION' | 'RECONSTRUCTION';
+export type ScenarioStatus = 'DRAFT' | 'SIMULATED' | 'REVIEWED' | 'APPROVED' | 'REJECTED';
+
+export interface DigitalTwinTrajectoryPoint {
+  year: number;
+  tag: 'ACTUAL' | 'FORECAST' | 'SIMULATION';
+  condition: number;
+  risk: number;
+  cost_cumulative: number;
+  status: string;
+}
+
+export interface DigitalTwinScenarioConfig {
+  intervention_type: ScenarioInterventionType;
+  intervention_name: string;
+  timing_months: number;
+  timing_label: string;
+  target_budget: number;
+  description: string;
+}
+
+export interface DigitalTwinEffectiveness {
+  condition_gain_pts: number;
+  risk_reduction_pts: number;
+  lifespan_extension_years: number;
+  cost_of_delay: number;
+  delay_cost_penalty_pct: number;
+}
+
+export interface DigitalTwinFinancials {
+  initial_cost: number;
+  immediate_cost: number;
+  cost_of_delay: number;
+  five_year_tco_simulated: number;
+  five_year_tco_do_nothing: number;
+  net_lifecycle_savings: number;
+}
+
+export interface DigitalTwinScenarioResult {
+  asset_id: string;
+  scenario: DigitalTwinScenarioConfig;
+  effectiveness: DigitalTwinEffectiveness;
+  financials: DigitalTwinFinancials;
+  trajectories: {
+    years: number[];
+    do_nothing: DigitalTwinTrajectoryPoint[];
+    simulated: DigitalTwinTrajectoryPoint[];
+  };
+  explainability: string;
+  model_metadata: Record<string, string>;
+}
+
+export interface SavedDigitalTwinScenario {
+  id: number;
+  asset_id: string;
+  name: string;
+  intervention_type: ScenarioInterventionType;
+  timing_months: number;
+  budget: number;
+  scenario_status: ScenarioStatus;
+  simulation_result?: DigitalTwinScenarioResult;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface DigitalTwinState {
+  asset_id: string;
+  name: string;
+  asset_type: string;
+  location: string;
+  zone: string;
+  latitude: number;
+  longitude: number;
+  condition_score: number;
+  risk_score: number;
+  risk_level: string;
+  priority_rank: number;
+  recommended_action: string;
+  estimated_repair_cost: number;
+  last_inspection_date?: string;
+  lifecycle_stage: LifecycleStage;
+  data_freshness: string;
+  citizen_signals: {
+    total_reports: number;
+    validated_reports: number;
+    active_reports: number;
+    latest_report_id?: string;
+    latest_category?: string;
+  };
+  ai_inspection_signals: {
+    inspection_id: string;
+    detected_damage: string;
+    confidence: number;
+    inspection_date: string;
+    human_review_status: string;
+  };
+  forecast_summary: {
+    is_available: boolean;
+    trend: string;
+    deterioration_rate: number;
+    maintenance_window: string;
+    critical_threshold_crossing: string;
+    forecast_12m: number;
+  };
+  scenarios: Record<string, any>;
+}
+
+// ============================================================
+// EXECUTIVE DECISION RECOMMENDATION & ACTION TYPES (PROMPT 10)
+// ============================================================
+
+export type RecommendationType = 'INSPECT' | 'MONITOR' | 'PREVENTIVE_MAINTENANCE' | 'REHABILITATE' | 'RECONSTRUCT' | 'REVIEW_BUDGET';
+export type RecommendationUrgency = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'ROUTINE';
+export type MunicipalActionStatus = 'NEW' | 'UNDER_REVIEW' | 'APPROVED' | 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'MONITORING';
+
+export interface DecisionRecommendation {
+  asset_id: string;
+  asset_name: string;
+  asset_type: string;
+  recommendation_type: RecommendationType;
+  action_title: string;
+  urgency: RecommendationUrgency;
+  target_window: string;
+  estimated_cost: number;
+  decision_confidence: 'HIGH' | 'MEDIUM' | 'LOW';
+  expected_impact: string;
+  why_explanation: string[];
+  decision_chain_stage: string;
+  is_funded: boolean;
+}
+
+export interface CityRecommendationsSummary {
+  total_evaluated: number;
+  critical_reconstruct_count: number;
+  urgent_rehabilitate_count: number;
+  preventive_maintenance_count: number;
+  inspection_required_count: number;
+  monitor_count: number;
+  total_recommended_budget: number;
+  unfunded_priority_budget: number;
+  attention_required: DecisionRecommendation[];
+  can_wait_monitor: DecisionRecommendation[];
+}
+
+export interface MunicipalActionItem {
+  id: number;
+  asset_id: string;
+  action_type: RecommendationType;
+  title: string;
+  urgency: RecommendationUrgency;
+  status: MunicipalActionStatus;
+  assigned_dept: string;
+  due_window: string;
+  estimated_cost: number;
+  rationale?: string;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface MunicipalActionCreateInput {
+  asset_id: string;
+  action_type: string;
+  title: string;
+  urgency?: string;
+  assigned_dept?: string;
+  due_window?: string;
+  estimated_cost?: number;
+  rationale?: string;
+}
+
 
 

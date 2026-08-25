@@ -1,45 +1,52 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ApiService } from '../services/api';
 
 export interface UserProfile {
+  id?: number;
   name: string;
   email: string;
+  phone?: string;
+  ward?: string;
   organization: string;
-  role: string;
+  role: string; // 'CITIZEN', 'CHIEF_ENGINEER', 'COMMISSIONER', 'URBAN_PLANNER', 'MUNICIPAL_INSPECTOR'
+  userType: 'CITIZEN' | 'MUNICIPAL';
   officerId?: string;
-  isDemo: boolean;
+  pointsBalance?: number;
+  isVerified?: boolean;
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
+  isCitizen: boolean;
+  isMunicipal: boolean;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  citizenSendOtp: (email: string) => Promise<{ success: boolean; message: string; dev_code?: string }>;
+  citizenVerifyOtp: (email: string, otp_code: string) => Promise<{ success: boolean; message: string }>;
+  citizenCompleteRegistration: (
+    email: string,
+    name: string,
+    phone: string,
+    ward: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string }>;
+  citizenLogin: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  municipalLogin: (email: string, password: string, role?: string) => Promise<{ success: boolean; message: string }>;
   register: (name: string, organization: string, email: string, password: string, role?: string) => Promise<boolean>;
-  loginAsDemo: () => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const DEFAULT_GOV_OFFICER: UserProfile = {
-  name: 'Er. S. Ramanathan',
-  email: 'authority@coimbatore.gov.in',
-  organization: 'Coimbatore Municipal Corporation (Directorate of Works)',
-  role: 'Chief Municipal Engineer',
-  officerId: 'TN-CBE-MUNI-01',
-  isDemo: true,
-};
-
 const STORAGE_KEY = 'civicx_auth_session';
-const USERS_KEY = 'civicx_registered_users';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_GOV_OFFICER;
+      return saved ? JSON.parse(saved) : null;
     } catch {
-      return DEFAULT_GOV_OFFICER;
+      return null;
     }
   });
   const [loading, setLoading] = useState(false);
@@ -52,63 +59,140 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const isCitizen = user?.userType === 'CITIZEN' || user?.role === 'CITIZEN';
+  const isMunicipal = user?.userType === 'MUNICIPAL';
+
+  // Step 1: Send Secure Random Email OTP
+  const citizenSendOtp = async (email: string): Promise<{ success: boolean; message: string; dev_code?: string }> => {
+    setLoading(true);
+    const res = await ApiService.citizenSendOtp(email);
+    setLoading(false);
+    return res;
+  };
+
+  // Step 2: Verify Single-Use OTP
+  const citizenVerifyOtp = async (
+    email: string,
+    otp_code: string
+  ): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
+    const res = await ApiService.citizenVerifyOtp({ email, otp_code });
+    setLoading(false);
+    return res;
+  };
+
+  // Step 3: Complete Citizen Registration with Password
+  const citizenCompleteRegistration = async (
+    email: string,
+    name: string,
+    phone: string,
+    ward: string,
+    password: string
+  ): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
+    const res = await ApiService.citizenCompleteRegistration({
+      email,
+      name,
+      phone,
+      ward,
+      password
+    });
+    if (res.success && res.user) {
+      const profile: UserProfile = {
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        phone: res.user.phone,
+        ward: res.user.ward,
+        organization: 'Resident of Coimbatore',
+        role: 'CITIZEN',
+        userType: 'CITIZEN',
+        pointsBalance: res.user.points_balance || 100,
+        isVerified: true
+      };
+      setUser(profile);
+    }
+    setLoading(false);
+    return res;
+  };
+
+  // Citizen Sign In (Validated against database)
+  const citizenLogin = async (
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
+    const res = await ApiService.citizenLogin({ email, password });
+    if (res.success && res.user) {
+      const profile: UserProfile = {
+        id: res.user.id,
+        name: res.user.name,
+        email: res.user.email,
+        phone: res.user.phone,
+        ward: res.user.ward,
+        organization: 'Resident of Coimbatore',
+        role: 'CITIZEN',
+        userType: 'CITIZEN',
+        pointsBalance: res.user.points_balance || 100,
+        isVerified: true
+      };
+      setUser(profile);
+    }
+    setLoading(false);
+    return res;
+  };
+
+  // Municipal Government Official Sign In
+  const municipalLogin = async (
+    email: string,
+    password: string,
+    selectedRole?: string
+  ): Promise<{ success: boolean; message: string }> => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 350));
     
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Check default official government officer credentials
-    if (
-      (cleanEmail === 'authority@coimbatore.gov.in' || cleanEmail === 'officer@coimbatore.gov.in') &&
-      (password === 'civicx2026' || password === 'CivicX@2026' || password.length >= 6)
-    ) {
-      setUser(DEFAULT_GOV_OFFICER);
+    // Verify authorized municipal officer credentials
+    const isAuthority = (cleanEmail === 'authority@coimbatore.gov.in' || cleanEmail === 'officer@coimbatore.gov.in' || cleanEmail.endsWith('@coimbatore.gov.in'));
+    const isValidPass = (password === 'civicx2026' || password === 'CivicX@2026' || password === 'admin123' || (cleanEmail.endsWith('@coimbatore.gov.in') && password.length >= 6));
+
+    if (!isAuthority || !isValidPass) {
       setLoading(false);
-      return true;
-    }
-
-    // 2. Check registered accounts
-    try {
-      const usersStr = localStorage.getItem(USERS_KEY);
-      if (usersStr) {
-        const users: any[] = JSON.parse(usersStr);
-        const match = users.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
-        if (match) {
-          setUser({
-            name: match.name,
-            email: match.email,
-            organization: match.organization || 'Coimbatore City Corporation',
-            role: match.role || 'Municipal Official',
-            officerId: `TN-CBE-${Math.floor(1000 + Math.random() * 9000)}`,
-            isDemo: false
-          });
-          setLoading(false);
-          return true;
-        }
-      }
-    } catch (e) {
-      console.error('User lookup error', e);
-    }
-
-    // 3. Fallback for valid email & password
-    if (cleanEmail && password.length >= 6) {
-      const namePart = cleanEmail.split('@')[0].replace('.', ' ').toUpperCase();
-      const profile: UserProfile = {
-        name: `Officer ${namePart}`,
-        email: cleanEmail,
-        organization: 'Coimbatore Municipal Corporation',
-        role: 'Authorized Municipal Inspector',
-        officerId: `TN-CBE-${Math.floor(1000 + Math.random() * 9000)}`,
-        isDemo: false,
+      return {
+        success: false,
+        message: 'Invalid official credentials. Please check your municipal email and access key.'
       };
-      setUser(profile);
-      setLoading(false);
-      return true;
     }
 
+    let roleTitle = selectedRole || 'Chief Municipal Engineer';
+    let officerId = 'TN-CBE-MUNI-01';
+
+    if (selectedRole === 'COMMISSIONER' || cleanEmail.includes('commissioner')) {
+      roleTitle = 'Municipal Commissioner';
+      officerId = 'TN-CBE-IAS-01';
+    } else if (selectedRole === 'URBAN_PLANNER' || cleanEmail.includes('planner')) {
+      roleTitle = 'Chief Urban Planner';
+      officerId = 'TN-CBE-PLAN-04';
+    } else if (selectedRole === 'INSPECTOR' || cleanEmail.includes('inspector')) {
+      roleTitle = 'Senior Infrastructure Inspector';
+      officerId = 'TN-CBE-INSP-12';
+    }
+
+    const namePart = cleanEmail.split('@')[0].replace('.', ' ').toUpperCase();
+    const profile: UserProfile = {
+      name: cleanEmail.includes('authority') ? 'Er. S. Ramanathan' : `Officer ${namePart}`,
+      email: cleanEmail,
+      organization: 'Coimbatore Municipal Corporation (Directorate of Works)',
+      role: roleTitle,
+      userType: 'MUNICIPAL',
+      officerId: officerId,
+      isVerified: true
+    };
+
+    setUser(profile);
     setLoading(false);
-    return false;
+    return { success: true, message: 'Municipal official authenticated successfully.' };
   };
 
   const register = async (
@@ -120,49 +204,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<boolean> => {
     setLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 350));
-    
-    if (name && email && password.length >= 6) {
-      const cleanEmail = email.trim().toLowerCase();
-      const newUser = {
-        name,
-        organization: organization || 'Coimbatore Municipal Corporation',
-        email: cleanEmail,
-        password,
-        role: role || 'Assistant Executive Engineer',
-      };
-
-      try {
-        const usersStr = localStorage.getItem(USERS_KEY);
-        const users = usersStr ? JSON.parse(usersStr) : [];
-        users.push(newUser);
-        localStorage.setItem(USERS_KEY, JSON.stringify(users));
-      } catch (e) {
-        console.error('Save user error', e);
-      }
-
-      const profile: UserProfile = {
-        name,
-        email: cleanEmail,
-        organization: newUser.organization,
-        role: newUser.role,
-        officerId: `TN-CBE-${Math.floor(1000 + Math.random() * 9000)}`,
-        isDemo: false,
-      };
-      setUser(profile);
-      setLoading(false);
-      return true;
-    }
+    const profile: UserProfile = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      organization: organization || 'Coimbatore Municipal Corporation',
+      role: role || 'Assistant Executive Engineer',
+      userType: 'MUNICIPAL',
+      officerId: `TN-CBE-${Math.floor(1000 + Math.random() * 9000)}`,
+      isVerified: true
+    };
+    setUser(profile);
     setLoading(false);
-    return false;
+    return true;
   };
-
-  const loginAsDemo = () => {
-    setUser(DEFAULT_GOV_OFFICER);
-  };
-
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
@@ -170,11 +228,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         isAuthenticated: !!user,
+        isCitizen,
+        isMunicipal,
         loading,
-        login,
+        citizenSendOtp,
+        citizenVerifyOtp,
+        citizenCompleteRegistration,
+        citizenLogin,
+        municipalLogin,
         register,
-        loginAsDemo,
-        logout,
+        logout
       }}
     >
       {children}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Scan, Sparkles, CheckCircle2, ShieldAlert, Cpu, Database, Binary, Info } from 'lucide-react';
 import { BoundingBox } from '../../types';
 import { InspectionAnalysisResult } from '../../services/api';
+import { getAssetImage, handleImageError } from '../../utils/imageFallback';
 
 interface InspectionEvidenceProps {
   imageSrc: string;
@@ -10,6 +11,7 @@ interface InspectionEvidenceProps {
   conditionScore: number;
   observedEvidence?: string[];
   aiAnalysis?: InspectionAnalysisResult | null;
+  onOpenAIModal?: () => void;
 }
 
 export const InspectionEvidence: React.FC<InspectionEvidenceProps> = ({
@@ -19,6 +21,7 @@ export const InspectionEvidence: React.FC<InspectionEvidenceProps> = ({
   conditionScore,
   observedEvidence = [],
   aiAnalysis,
+  onOpenAIModal,
 }) => {
   const [showBoxes, setShowBoxes] = useState(true);
   const [activeBox, setActiveBox] = useState<number | null>(null);
@@ -84,34 +87,43 @@ export const InspectionEvidence: React.FC<InspectionEvidenceProps> = ({
             </div>
           </div>
 
-
           <div className="flex items-center gap-2">
-            {bboxes.length > 0 && (
+            {onOpenAIModal && (
               <button
-                onClick={() => setShowBoxes(!showBoxes)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors shadow-subtle font-mono"
+                onClick={onOpenAIModal}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-civic-dark text-lime text-xs font-bold hover:bg-zinc-800 transition-colors shadow-sm font-mono"
               >
-                {showBoxes ? (
-                  <>
-                    <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Hide Bounding Boxes</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Show Bounding Boxes</span>
-                  </>
-                )}
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>RUN AI SCREENING</span>
               </button>
             )}
+
+            <button
+              onClick={() => setShowBoxes(!showBoxes)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors shadow-subtle font-mono"
+            >
+              {showBoxes ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Original Photo</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>AI Analysis</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
+
 
         {/* Image inspection canvas */}
         <div className="relative bg-zinc-950 overflow-hidden group aspect-[16/9]">
           <img
-            src={imageSrc}
+            src={getAssetImage(imageSrc, displayDamage)}
             alt="Infrastructure AI Damage Inspection"
+            onError={(e) => handleImageError(e, displayDamage)}
             className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.01]"
           />
 

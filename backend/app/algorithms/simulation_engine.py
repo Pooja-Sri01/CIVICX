@@ -1,12 +1,235 @@
 """
-CIVICX City Time Machine Deterioration Simulator
-Simulates future infrastructure states across time horizons (2026-2030 / 3, 6, 12, 24, 36 months)
-for scenarios: REPAIR_NOW, PARTIAL_REPAIR, and DELAY.
+CIVICX City Time Machine & Digital Twin Simulation Engine (Prompt 9)
+Simulates multi-horizon infrastructure deterioration decay curves (2026-2030),
+counterfactual what-if scenarios (Do Nothing, Routine, Preventive, Rehabilitation, Reconstruction),
+timing offsets (Now, 6M, 12M, 24M), lifecycle total cost of ownership (TCO), and cost of delay.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class SimulationEngine:
+    INTERVENTION_MODELS = {
+        "DO_NOTHING": {
+            "name": "Do Nothing (Untreated Decay)",
+            "condition_boost": 0,
+            "max_condition": 100,
+            "cost_multiplier": 0.0,
+            "lifespan_extension_years": 0,
+            "target_risk": None,
+            "description": "No municipal intervention. Asset follows empirical deterioration trajectory."
+        },
+        "ROUTINE_MAINTENANCE": {
+            "name": "Routine Maintenance (Patching & Crack Sealing)",
+            "condition_boost": 12,
+            "max_condition": 75,
+            "cost_multiplier": 0.15,
+            "lifespan_extension_years": 1,
+            "target_risk": 55,
+            "description": "Surface level pothole filling and localized sealants. Recurrence failure likely within 12 months."
+        },
+        "PREVENTIVE_MAINTENANCE": {
+            "name": "Preventive Maintenance (High-Modulus Overlay)",
+            "condition_boost": 35,
+            "max_condition": 92,
+            "cost_multiplier": 0.65,
+            "lifespan_extension_years": 4,
+            "target_risk": 18,
+            "description": "Polymer-modified asphalt resurfacing and joint waterproofing preventing subgrade water ingress."
+        },
+        "REHABILITATION": {
+            "name": "Major Structural Rehabilitation",
+            "condition_boost": 60,
+            "max_condition": 98,
+            "cost_multiplier": 1.0,
+            "lifespan_extension_years": 8,
+            "target_risk": 12,
+            "description": "Full-depth milling, base course stabilization, and structural bearing rehabilitation."
+        },
+        "RECONSTRUCTION": {
+            "name": "Full Corridor Reconstruction",
+            "condition_boost": 85,
+            "max_condition": 100,
+            "cost_multiplier": 2.4,
+            "lifespan_extension_years": 15,
+            "target_risk": 8,
+            "description": "Complete subgrade replacement and modern high-capacity structural reconstruction."
+        }
+    }
+
+    @classmethod
+    def simulate_custom_scenario(
+        cls,
+        asset_id: str,
+        current_condition: int,
+        current_risk: int,
+        base_repair_cost: float,
+        intervention_type: str = "PREVENTIVE_MAINTENANCE",
+        timing_months: int = 0, # 0 (Now), 6, 12, 24
+        custom_budget: Optional[float] = None,
+        deterioration_rate: float = 14.5
+    ) -> Dict[str, Any]:
+        """
+        Simulates a specific counterfactual What-If scenario (Intervention + Timing)
+        and compares it against the 'Do Nothing' baseline.
+        """
+        c0 = max(1, min(100, int(current_condition)))
+        r0 = max(1, min(99, int(current_risk)))
+        cost_base = max(50000.0, float(base_repair_cost))
+        rate = max(4.0, float(deterioration_rate))
+
+        intervention_key = intervention_type.upper()
+        if intervention_key not in cls.INTERVENTION_MODELS:
+            intervention_key = "PREVENTIVE_MAINTENANCE"
+        
+        cfg = cls.INTERVENTION_MODELS[intervention_key]
+        
+        # Calculate cost with timing escalation penalty
+        # Delay increases required intervention scope and cost
+        timing_years = timing_months / 12.0
+        delay_cost_escalation = 1.0 + (timing_years * 0.45) # +45% cost per year of deferral
+        
+        initial_cost = round(cost_base * cfg["cost_multiplier"] * (delay_cost_escalation if intervention_key != "DO_NOTHING" else 0.0), 2)
+        immediate_cost = round(cost_base * cfg["cost_multiplier"], 2)
+        cost_of_delay = max(0.0, round(initial_cost - immediate_cost, 2))
+
+        # Yearly Timelines (2026 - 2030)
+        years = [2026, 2027, 2028, 2029, 2030]
+        timeline_do_nothing = []
+        timeline_simulated = []
+
+        curr_c_dn = c0
+        curr_r_dn = r0
+        curr_c_sim = c0
+        curr_r_sim = r0
+
+        applied = False
+
+        for yr_idx, yr in enumerate(years):
+            elapsed_months = yr_idx * 12
+            
+            # --- 1. DO NOTHING TRAJECTORY ---
+            if yr_idx == 0:
+                timeline_do_nothing.append({
+                    "year": yr,
+                    "tag": "ACTUAL",
+                    "condition": curr_c_dn,
+                    "risk": curr_r_dn,
+                    "cost_cumulative": 0.0,
+                    "status": "Current Monitored State"
+                })
+            else:
+                decay = rate * (1.25 if curr_c_dn < 40 else 1.1)
+                curr_c_dn = max(2, round(curr_c_dn - decay))
+                curr_r_dn = min(99, round(curr_r_dn + (decay * 0.8)))
+                timeline_do_nothing.append({
+                    "year": yr,
+                    "tag": "FORECAST" if yr_idx <= 2 else "SIMULATION",
+                    "condition": curr_c_dn,
+                    "risk": curr_r_dn,
+                    "cost_cumulative": 0.0,
+                    "status": "Critical Subgrade Rutting" if curr_c_dn < 40 else "Accelerating Degradation"
+                })
+
+            # --- 2. WHAT-IF SIMULATED TRAJECTORY ---
+            if yr_idx == 0:
+                if timing_months == 0 and intervention_key != "DO_NOTHING":
+                    # Applied immediately in 2026
+                    curr_c_sim = min(cfg["max_condition"], c0 + cfg["condition_boost"])
+                    curr_r_sim = cfg["target_risk"] or max(10, r0 - 45)
+                    applied = True
+                    timeline_simulated.append({
+                        "year": yr,
+                        "tag": "SIMULATION",
+                        "condition": curr_c_sim,
+                        "risk": curr_r_sim,
+                        "cost_cumulative": initial_cost,
+                        "status": f"Intervention Applied: {cfg['name']}"
+                    })
+                else:
+                    timeline_simulated.append({
+                        "year": yr,
+                        "tag": "ACTUAL",
+                        "condition": c0,
+                        "risk": r0,
+                        "cost_cumulative": 0.0,
+                        "status": "Baseline State"
+                    })
+            else:
+                # Check if intervention triggers in this year
+                if not applied and elapsed_months >= timing_months and intervention_key != "DO_NOTHING":
+                    # Apply intervention with recovered condition
+                    curr_c_sim = min(cfg["max_condition"], curr_c_sim + cfg["condition_boost"])
+                    curr_r_sim = cfg["target_risk"] or max(10, curr_r_sim - 40)
+                    applied = True
+                    timeline_simulated.append({
+                        "year": yr,
+                        "tag": "SIMULATION",
+                        "condition": curr_c_sim,
+                        "risk": curr_r_sim,
+                        "cost_cumulative": initial_cost,
+                        "status": f"Intervention Applied ({timing_months}M): {cfg['name']}"
+                    })
+                else:
+                    # Post-intervention slower decay rate or pre-intervention natural decay
+                    active_rate = (rate * 0.35) if applied else (rate * 1.15)
+                    curr_c_sim = max(2, round(curr_c_sim - active_rate))
+                    curr_r_sim = min(99, round(curr_r_sim + (active_rate * 0.6)))
+                    timeline_simulated.append({
+                        "year": yr,
+                        "tag": "SIMULATION",
+                        "condition": curr_c_sim,
+                        "risk": curr_r_sim,
+                        "cost_cumulative": initial_cost if applied else 0.0,
+                        "status": "Stabilized Lifecycle" if applied else "Deferred Degradation"
+                    })
+
+        # Intervention Effectiveness Metrics
+        final_cond_delta = timeline_simulated[-1]["condition"] - timeline_do_nothing[-1]["condition"]
+        final_risk_delta = timeline_do_nothing[-1]["risk"] - timeline_simulated[-1]["risk"]
+
+        tco_simulated = initial_cost + (initial_cost * 0.12) # +12% maintenance over 5 yrs
+        tco_do_nothing = cost_base * 3.4 # Emergency delayed full reconstruction cost
+
+        return {
+            "asset_id": asset_id,
+            "scenario": {
+                "intervention_type": intervention_key,
+                "intervention_name": cfg["name"],
+                "timing_months": timing_months,
+                "timing_label": "Immediate (Now)" if timing_months == 0 else f"{timing_months} Months Delay",
+                "target_budget": custom_budget or initial_cost,
+                "description": cfg["description"]
+            },
+            "effectiveness": {
+                "condition_gain_pts": max(0, final_cond_delta),
+                "risk_reduction_pts": max(0, final_risk_delta),
+                "lifespan_extension_years": cfg["lifespan_extension_years"],
+                "cost_of_delay": cost_of_delay,
+                "delay_cost_penalty_pct": round(((delay_cost_escalation - 1.0) * 100), 1) if timing_months > 0 else 0.0
+            },
+            "financials": {
+                "initial_cost": initial_cost,
+                "immediate_cost": immediate_cost,
+                "cost_of_delay": cost_of_delay,
+                "five_year_tco_simulated": round(tco_simulated, 2),
+                "five_year_tco_do_nothing": round(tco_do_nothing, 2),
+                "net_lifecycle_savings": round(max(0.0, tco_do_nothing - tco_simulated), 2)
+            },
+            "trajectories": {
+                "years": years,
+                "do_nothing": timeline_do_nothing,
+                "simulated": timeline_simulated
+            },
+            "explainability": (
+                f"Applying {cfg['name']} at {timing_months}M preserves condition at {timeline_simulated[-1]['condition']}/100 in 2030 "
+                f"(vs {timeline_do_nothing[-1]['condition']}/100 Do Nothing), avoiding a ₹{round(cost_of_delay/100000.0, 1)}L delay cost escalation."
+            ),
+            "model_metadata": {
+                "simulation_engine": "CIVICX-DigitalTwin-v2.0",
+                "prediction_baseline": "CIVICX-Deterioration-Baseline-v1.2.0"
+            }
+        }
+
     @classmethod
     def simulate_asset(
         cls,
@@ -20,14 +243,13 @@ class SimulationEngine:
     ) -> Dict[str, Any]:
         """
         Runs comprehensive multi-horizon and multi-scenario deterioration simulation.
+        (Maintains 100% backward compatibility for all existing simulation endpoints).
         """
         r0 = max(1, min(99, int(current_risk)))
         c0 = max(1, min(100, int(current_condition)))
         base_cost = max(50000.0, float(base_repair_cost))
         rate = max(5.0, float(deterioration_rate))
 
-        # Year-by-Year Multi-Horizon Timeline Projection (2026 -> 2030)
-        # Year 2026 (Today / Baseline)
         timeline_2026 = {
             "year": 2026,
             "label": "2026 (Today)",
@@ -36,7 +258,6 @@ class SimulationEngine:
             "delay": {"risk": r0, "condition": c0, "cost": base_cost, "maintenance_need": "Active surface & subgrade distress"}
         }
 
-        # Year 2027 (+12 Months)
         r_2027 = min(98, r0 + round(max(10, (100 - c0) * 0.35 + (rate * 0.65))))
         c_2027 = max(15, c0 - round(c0 * 0.45 + 10))
         cost_2027 = round(base_cost * 2.45, 2)
@@ -48,7 +269,6 @@ class SimulationEngine:
             "delay": {"risk": r_2027, "condition": c_2027, "cost": cost_2027, "maintenance_need": "Sub-base erosion; full-depth repair required"}
         }
 
-        # Year 2028 (+24 Months)
         r_2028 = min(99, r_2027 + round(max(8, (100 - c_2027) * 0.30 + (rate * 0.50))))
         c_2028 = max(8, c_2027 - round(c_2027 * 0.50 + 8))
         cost_2028 = round(base_cost * 3.20, 2)
@@ -60,7 +280,6 @@ class SimulationEngine:
             "delay": {"risk": r_2028, "condition": c_2028, "cost": cost_2028, "maintenance_need": "Structural foundation displacement; road closure risk"}
         }
 
-        # Year 2029 (+36 Months)
         r_2029 = min(99, r_2028 + 5)
         c_2029 = max(4, c_2028 - 5)
         cost_2029 = round(base_cost * 4.10, 2)
@@ -72,7 +291,6 @@ class SimulationEngine:
             "delay": {"risk": r_2029, "condition": c_2029, "cost": cost_2029, "maintenance_need": "Critical corridor failure; complete reconstruction required"}
         }
 
-        # Year 2030 (+48 Months)
         r_2030 = 99
         c_2030 = 2
         cost_2030 = round(base_cost * 4.80, 2)
@@ -86,7 +304,6 @@ class SimulationEngine:
 
         yearly_timeline = [timeline_2026, timeline_2027, timeline_2028, timeline_2029, timeline_2030]
 
-        # Granular Short-Term Horizons (3, 6, 12 Months)
         r_3m = min(98, r0 + round(max(3, (100 - c0) * 0.08 + (rate * 0.15))))
         c_3m = max(5, c0 - round(c0 * 0.12 + 3))
         cost_3m = round(base_cost * 1.22, 2)
@@ -138,7 +355,6 @@ class SimulationEngine:
             }
         }
 
-        # 3 Core Decision Scenarios
         cost_of_delay_6m = round(cost_6m - base_cost, 2)
         additional_risk_delay_6m = max(0, r_6m - 12)
 
@@ -176,7 +392,6 @@ class SimulationEngine:
             }
         }
 
-        # Decision Insight Synthesis
         decision_insight = (
             f"Immediate preventative intervention yields the lowest 5-year lifecycle cost ({round(base_cost * 1.15 / 100000.0, 1)}L TCO) "
             f"and permanently avoids the ₹{round(cost_of_delay_6m / 100000.0, 1)}L delay penalty caused by compound subgrade water erosion."
@@ -254,4 +469,3 @@ class SimulationEngine:
             "total_5year_savings": round(city_timeline[-1]["delayed_cost"] - city_timeline[-1]["proactive_cost"], 2),
             "total_risk_points_prevented": city_timeline[-1]["delayed_risk"] - city_timeline[-1]["proactive_risk"]
         }
-

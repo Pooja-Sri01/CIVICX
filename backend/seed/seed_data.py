@@ -27,7 +27,7 @@ CORE_COIMBATORE_ASSETS: List[Dict[str, Any]] = [
         "estimated_repair_cost": 1850000.0,
         "priority_rank": 1,
         "recommended_action": "Full-Depth Milling & High-Modulus Bituminous Overlay",
-        "image_url": "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=1000&q=80",
+        "image_url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1000&q=80",
         "last_inspection_date": "2026-08-14",
         "maintenance_records": [
             {"maintenance_type": "Emergency Cold Patch", "description": "Temporary cold mix infill for central lane potholes.", "cost": 120000.0, "date": "2025-06-10", "status": "COMPLETED", "vendor": "Coimbatore InfraWorks Ltd", "condition_after": 52},
@@ -59,7 +59,7 @@ CORE_COIMBATORE_ASSETS: List[Dict[str, Any]] = [
         "estimated_repair_cost": 4200000.0,
         "priority_rank": 2,
         "recommended_action": "Modular Expansion Joint Replacement & Elastomeric Bearing Rehabilitation",
-        "image_url": "https://images.unsplash.com/photo-1545459720-aac8509eb02c?auto=format&fit=crop&w=1000&q=80",
+        "image_url": "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80",
         "last_inspection_date": "2026-08-11",
         "maintenance_records": [
             {"maintenance_type": "Joint Sealant Injection", "description": "Elastomeric sealant injected into leaking joint gap.", "cost": 450000.0, "date": "2024-11-20", "status": "COMPLETED", "vendor": "L&T Infrastructure Services", "condition_after": 68}
@@ -89,7 +89,7 @@ CORE_COIMBATORE_ASSETS: List[Dict[str, Any]] = [
         "estimated_repair_cost": 1250000.0,
         "priority_rank": 3,
         "recommended_action": "Reinforced Concrete Box Desilting & Precast Symmetrical Invert Liners",
-        "image_url": "https://images.unsplash.com/photo-1541888946425-d0fbb180c5f5?auto=format&fit=crop&w=1000&q=80",
+        "image_url": "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80",
         "last_inspection_date": "2026-08-08",
         "maintenance_records": [
             {"maintenance_type": "Mechanical Desilting", "description": "Excavator desilting of downstream lake outfall.", "cost": 180000.0, "date": "2025-05-15", "status": "COMPLETED", "vendor": "City EcoClean Infra", "condition_after": 60}
@@ -150,7 +150,7 @@ CORE_COIMBATORE_ASSETS: List[Dict[str, Any]] = [
         "priority_rank": 5,
         "recommendedAction": "High-Early-Strength Concrete Bay Reconstruction",
         "recommended_action": "High-Early-Strength Concrete Bay Reconstruction",
-        "image_url": "https://images.unsplash.com/photo-1578964777085-78e72765d7fe?auto=format&fit=crop&w=1000&q=80",
+        "image_url": "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80",
         "last_inspection_date": "2026-08-07",
         "maintenance_records": [],
         "reports": [
@@ -178,7 +178,7 @@ CORE_COIMBATORE_ASSETS: List[Dict[str, Any]] = [
         "estimated_repair_cost": 1400000.0,
         "priority_rank": 6,
         "recommended_action": "Micro-surfacing & Utility Re-trench Stabilization",
-        "image_url": "https://images.unsplash.com/photo-1578964777085-78e72765d7fe?auto=format&fit=crop&w=1000&q=80",
+        "image_url": "https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=1000&q=80",
         "last_inspection_date": "2026-07-29",
         "maintenance_records": [
             {"maintenance_type": "Patch Re-carpeting", "description": "Trench resurfacing after gas pipeline installation.", "cost": 150000.0, "date": "2025-02-14", "status": "COMPLETED", "vendor": "West Zone Works", "condition_after": 72}
@@ -301,27 +301,35 @@ def generate_all_78_assets() -> List[Dict[str, Any]]:
             environmental_exposure=env_exp
         )
         
-        # Damage type classification
+        # Damage type classification and authentic infrastructure photos
         if atype == "Road":
             dtype = "Pavement Fatigue Cracking & Localized Raveling" if risk_res["risk_score"] < 70 else "Severe Potholes & Edge Subsidence"
             action = "Preventative Resurfacing & Base Stabilization" if risk_res["risk_score"] < 70 else "Full-Depth Milling & Overlay"
-            img = "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=1000&q=80"
+            img = "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1000&q=80" if risk_res["risk_score"] >= 70 else "https://images.unsplash.com/photo-1598880940371-c756e015fea1?auto=format&fit=crop&w=1000&q=80"
         elif atype == "Bridge":
             dtype = "Elastomeric Bearing Wear & Parapet Cracking"
             action = "Bearing Jacking & Parapet Concrete Patching"
-            img = "https://images.unsplash.com/photo-1545459720-aac8509eb02c?auto=format&fit=crop&w=1000&q=80"
+            img = "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80" if idx % 2 == 0 else "https://images.unsplash.com/photo-1519817650390-64a93db51149?auto=format&fit=crop&w=1000&q=80"
         elif atype == "Drainage" or atype == "Culvert":
             dtype = "Invert Silt Accumulation & Headwall Scour"
             action = "Mechanical Desilting & Precast Concrete Lining"
-            img = "https://images.unsplash.com/photo-1541888946425-d0fbb180c5f5?auto=format&fit=crop&w=1000&q=80"
+            img = "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80"
         elif atype == "Flyover":
             dtype = "Expansion Joint Delamination & Pier Spalling"
             action = "Expansion Joint Reconstruction & Carbon Wrap"
             img = "https://images.unsplash.com/photo-1590486803833-1c5dc8ddd4c8?auto=format&fit=crop&w=1000&q=80"
-        else:
+        elif atype == "Public Facility":
+            dtype = "Heavy Apron Concrete Spalling & Surface Wear"
+            action = "Apron Bay Reconstruction & High-Strength Infill"
+            img = "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80" if idx % 2 == 0 else "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1000&q=80"
+        elif atype == "Traffic Corridor":
+            dtype = "Junction Asphalt Raveling & Signal Corridor Wear"
+            action = "High-Traffic Overlay & Micro-Surfacing"
+            img = "https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?auto=format&fit=crop&w=1000&q=80"
+        else: # Street Infrastructure
             dtype = "Surface Paver Loosening & Trench Subsidence"
             action = "Paver Re-bedding & Bituminous Resealing"
-            img = "https://images.unsplash.com/photo-1578964777085-78e72765d7fe?auto=format&fit=crop&w=1000&q=80"
+            img = "https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=1000&q=80"
 
         # Maintenance records and reports
         m_records = [

@@ -373,6 +373,12 @@ const StepDetail: React.FC<{ step: DecisionStep; config: any }> = ({ step, confi
         <Row label="Incident Reports" value={`${d.incident_reports ?? 0} reports`} />
         <Row label="Last Inspection" value={d.last_inspection || 'Not recorded'} />
         <Row label="Data Quality" value={d.data_age_label || 'Analytical Baseline'} />
+        {d.citizen_reports_count !== undefined && d.citizen_reports_count > 0 && (
+          <div className="mt-1.5 pt-1.5 border-t border-purple-200 text-purple-900 font-mono text-[10px] flex items-center justify-between">
+            <span className="font-bold">Citizen Evidence Available:</span>
+            <span className="font-bold">{d.citizen_reports_count} validated observations</span>
+          </div>
+        )}
       </div>
     );
   }

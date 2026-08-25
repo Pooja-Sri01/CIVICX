@@ -1,13 +1,11 @@
 import os
-from dotenv import load_dotenv
-
-# Load environment variables from .env if present
-load_dotenv()
-
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
+from backend.app.core.config import settings
+from backend.app.core.middleware import RequestCorrelationMiddleware
+from backend.app.core.exceptions import CivicXException, civicx_exception_handler
 from backend.app.database.session import Base, engine, SessionLocal
 from backend.app.models.models import Asset
 from backend.app.api.routes import (
@@ -20,7 +18,13 @@ from backend.app.api.routes import (
     simulation,
     inspection,
     reports,
-    copilot
+    copilot,
+    citizen,
+    civic_reports,
+    predictions,
+    digital_twin,
+    recommendations,
+    actions
 )
 from backend.seed.seed_runner import seed_database
 
@@ -41,35 +45,27 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="CIVICX API",
-    description="AI-Powered Infrastructure Risk & Decision Intelligence Platform REST Backend",
-    version="2.0.0",
+    title=settings.PROJECT_NAME,
+    description="Enterprise Infrastructure Risk & Decision Intelligence Platform REST Backend",
+    version=settings.VERSION,
     lifespan=lifespan
 )
 
-# CORS Configuration
-cors_env = os.getenv("CORS_ORIGINS", "").strip()
-allowed_origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:4173",
-    "http://127.0.0.1:4173",
-    "http://localhost:3000",
-]
-if cors_env and cors_env != "*":
-    for o in cors_env.split(","):
-        if o.strip() and o.strip() not in allowed_origins:
-            allowed_origins.append(o.strip())
+# Exception Handlers
+app.add_exception_handler(CivicXException, civicx_exception_handler)
 
+# Request Correlation Middleware
+app.add_middleware(RequestCorrelationMiddleware)
+
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if cors_env == "*" else allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app" if cors_env != "*" else None,
+    allow_origins=settings.cors_origin_list,
+    allow_origin_regex=r"https://.*\.vercel\.app" if settings.CORS_ORIGINS != "*" else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Mount all modular REST endpoints under /api (specific routes before parameterized wildcards)
 app.include_router(health.router, prefix="/api")
@@ -81,8 +77,13 @@ app.include_router(simulation.router, prefix="/api")
 app.include_router(inspection.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(copilot.router, prefix="/api")
+app.include_router(citizen.router, prefix="/api")
+app.include_router(civic_reports.router, prefix="/api")
+app.include_router(predictions.router, prefix="/api")
+app.include_router(digital_twin.router, prefix="/api")
+app.include_router(recommendations.router, prefix="/api")
+app.include_router(actions.router, prefix="/api")
 app.include_router(assets.router, prefix="/api")
-
 
 
 @app.get("/")
@@ -90,10 +91,8 @@ def root():
     return {
         "platform": "CIVICX",
         "tagline": "Predict the Risk. Prioritize the Fix. Simulate the Future.",
+        "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
         "docs": "/docs",
         "health": "/api/health"
     }
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True)

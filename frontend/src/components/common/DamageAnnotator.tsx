@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BoundingBox } from '../../types';
 import { Eye, EyeOff, Sparkles, CheckCircle2, Scan } from 'lucide-react';
+import { getAssetImage, handleImageError } from '../../utils/imageFallback';
 
 interface DamageAnnotatorProps {
   imageSrc: string;
@@ -59,8 +60,9 @@ export const DamageAnnotator: React.FC<DamageAnnotatorProps> = ({
       {/* Image with bounding box annotations */}
       <div className="relative bg-zinc-900 overflow-hidden group aspect-[16/10] sm:aspect-[16/9]">
         <img
-          src={imageSrc}
+          src={getAssetImage(imageSrc, damageType)}
           alt="Infrastructure Damage Inspection"
+          onError={(e) => handleImageError(e, damageType)}
           className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
         />
 

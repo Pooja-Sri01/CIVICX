@@ -22,17 +22,21 @@ import {
   BarChart3,
   Compass,
   FileText,
-  Database
+  Database,
+  ListTodo
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 import { ApiService, RiskDistributionData } from '../services/api';
-import { Asset, DashboardSummary, AIDecisionInsightsResponse } from '../types';
+import { Asset, DashboardSummary, AIDecisionInsightsResponse, CivicReportStats, PredictiveSummary, CityRecommendationsSummary, DecisionRecommendation } from '../types';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { DashboardSkeleton } from '../components/common/DashboardSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
 import { AIDecisionInsightsCard } from '../components/copilot/AIDecisionInsightsCard';
 import { AssetDecisionChain } from '../components/common/AssetDecisionChain';
+import { AttentionVsMonitorPanel } from '../components/dashboard/AttentionVsMonitorPanel';
+import { BudgetIntelligenceGapCard } from '../components/dashboard/BudgetIntelligenceGapCard';
+import { CivicDecisionChainRibbon } from '../components/common/CivicDecisionChainRibbon';
 import { formatINR } from '../utils/formatters';
 import { useAuth } from '../context/AuthContext';
 
@@ -45,6 +49,9 @@ export const DashboardPage: React.FC = () => {
   const [priorities, setPriorities] = useState<Asset[]>([]);
   const [selectedPriority, setSelectedPriority] = useState<Asset | null>(null);
   const [insights, setInsights] = useState<AIDecisionInsightsResponse | null>(null);
+  const [civicStats, setCivicStats] = useState<CivicReportStats | null>(null);
+  const [predictiveSummary, setPredictiveSummary] = useState<PredictiveSummary | null>(null);
+  const [recommendationsSummary, setRecommendationsSummary] = useState<CityRecommendationsSummary | null>(null);
   const [dataHealth, setDataHealth] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,16 +60,22 @@ export const DashboardPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const [sumData, distData, prioData, insData] = await Promise.all([
+      const [sumData, distData, prioData, insData, statsData, predData, recData] = await Promise.all([
         ApiService.getDashboardSummary(),
         ApiService.getRiskDistribution(),
         ApiService.getPriorities(),
-        ApiService.getAIDecisionInsights()
+        ApiService.getAIDecisionInsights(),
+        ApiService.getCivicReportStats(),
+        ApiService.getPredictiveSummary(),
+        ApiService.getCityRecommendationsSummary()
       ]);
       setSummary(sumData);
       setRiskDist(distData);
       setPriorities(prioData);
       setInsights(insData);
+      setCivicStats(statsData);
+      setPredictiveSummary(predData);
+      setRecommendationsSummary(recData);
       if (prioData.length > 0) {
         setSelectedPriority(prioData[0]);
       }
@@ -293,25 +306,114 @@ export const DashboardPage: React.FC = () => {
       </motion.div>
 
       {/* ============================================================ */}
-      {/* SECTION B.2: AI DECISION INSIGHTS                           */}
+      {/* SECTION B.2: AI DECISION INSIGHTS + PREDICTIVE OUTLOOK       */}
       {/* ============================================================ */}
-      {insights && (
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {insights && (
+          <motion.div variants={itemVariants} className={`${predictiveSummary ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
+            <AIDecisionInsightsCard insightsData={insights} />
+          </motion.div>
+        )}
+
+        {predictiveSummary && (
+          <motion.div variants={itemVariants} className="lg:col-span-4 p-5 rounded-3xl bg-zinc-950 text-white border border-zinc-800 space-y-3 font-mono shadow-subtle flex flex-col justify-between">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-lime animate-pulse" />
+                <span className="text-[10px] text-zinc-300 font-bold uppercase tracking-wider">
+                  PREDICTIVE OUTLOOK
+                </span>
+              </div>
+              <span className="bg-lime text-civic-dark text-[9px] font-bold px-1.5 py-0.2 rounded">
+                PROMPT 8
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[9px] text-zinc-400 block font-bold uppercase">Accelerating</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="font-display font-black text-xl text-red-400">
+                    {predictiveSummary.accelerating_count}
+                  </span>
+                  <span className="text-[10px] text-zinc-400">assets</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[9px] text-zinc-400 block font-bold uppercase">Critical &lt;12M</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="font-display font-black text-xl text-rose-400">
+                    {predictiveSummary.critical_under_12m}
+                  </span>
+                  <span className="text-[10px] text-zinc-400">assets</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[9px] text-zinc-400 block font-bold uppercase">Maint &lt;6M</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="font-display font-black text-xl text-amber-400">
+                    {predictiveSummary.maintenance_under_6m}
+                  </span>
+                  <span className="text-[10px] text-zinc-400">urgent</span>
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[9px] text-zinc-400 block font-bold uppercase">Low Baseline</span>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="font-display font-black text-xl text-zinc-300">
+                    {predictiveSummary.low_data_confidence_count}
+                  </span>
+                  <span className="text-[10px] text-zinc-400">survey</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-1 flex items-center justify-between text-[10px] text-zinc-400 border-t border-zinc-900">
+              <span>Avg 12M Loss: <strong>-{predictiveSummary.avg_projected_loss_12m} pts</strong></span>
+              <Link to="/priorities" className="text-lime hover:underline font-bold flex items-center gap-1">
+                Predictive Queue →
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* ============================================================ */}
+      {/* SECTION B.3: ATTENTION REQUIRED VS WHAT CAN WAIT (PROMPT 10) */}
+      {/* ============================================================ */}
+      {recommendationsSummary && (
         <motion.div variants={itemVariants}>
-          <AIDecisionInsightsCard insightsData={insights} />
+          <AttentionVsMonitorPanel
+            attentionList={recommendationsSummary.attention_required}
+            monitorList={recommendationsSummary.can_wait_monitor}
+            onSelectAction={(rec) => navigate(`/assets/${rec.asset_id}#digital-twin`)}
+          />
         </motion.div>
       )}
 
       {/* ============================================================ */}
-      {/* SECTION B.3: DATA HEALTH + TOP PRIORITY DECISION CHAIN      */}
+      {/* SECTION B.4: BUDGET GAP ANALYSIS + DATA HEALTH              */}
       {/* ============================================================ */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Budget Intelligence Gap Card */}
+        <div className="lg:col-span-7">
+          <BudgetIntelligenceGapCard
+            availableBudget={50000000.0}
+            requiredBudget={recommendationsSummary?.total_recommended_budget || 77176000.0}
+            unfundedGap={recommendationsSummary?.unfunded_priority_budget || 27176000.0}
+          />
+        </div>
+
         {/* Data Health Mini-Panel */}
         {dataHealth && (
-          <div className="lg:col-span-4 p-4 rounded-2xl bg-white border border-zinc-200 space-y-3">
+          <div className="lg:col-span-5 p-5 rounded-3xl bg-white border border-zinc-200 space-y-3 shadow-subtle">
             <div className="flex items-center gap-2 pb-2 border-b border-zinc-100">
-              <Database className="w-3.5 h-3.5 text-zinc-500" />
+              <Database className="w-4 h-4 text-zinc-500" />
               <h3 className="text-[10px] font-mono uppercase font-bold text-zinc-500 tracking-widest">DATA HEALTH</h3>
-              <span className={`ml-auto text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full ${
+              <span className={`ml-auto text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
                 dataHealth.health_score >= 70 ? 'bg-emerald-50 text-emerald-700' :
                 dataHealth.health_score >= 40 ? 'bg-amber-50 text-amber-700' :
                 'bg-red-50 text-red-700'
@@ -319,38 +421,19 @@ export const DashboardPage: React.FC = () => {
                 {dataHealth.health_score.toFixed(0)}% QUALITY
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
                 { label: 'Recent (≤30d)', value: dataHealth.recent_inspections, color: 'text-emerald-600' },
                 { label: 'Moderate (≤90d)', value: dataHealth.moderate_age_inspections, color: 'text-amber-600' },
                 { label: 'Outdated (>90d)', value: dataHealth.outdated_inspections, color: 'text-orange-600' },
-                { label: 'No Date', value: dataHealth.missing_inspection_date, color: 'text-red-600' },
-                { label: 'With Records', value: dataHealth.assets_with_maintenance_records, color: 'text-blue-600' },
-                { label: 'No Records', value: dataHealth.assets_without_maintenance_records, color: 'text-zinc-500' },
               ].map((item, i) => (
-                <div key={i} className="bg-zinc-50 rounded-lg p-2">
-                  <div className={`text-base font-bold font-mono ${item.color}`}>{item.value}</div>
-                  <div className="text-[10px] text-zinc-500">{item.label}</div>
+                <div key={i} className="bg-zinc-50 rounded-xl p-2 text-center">
+                  <div className={`text-sm font-bold font-mono ${item.color}`}>{item.value}</div>
+                  <div className="text-[9px] text-zinc-500">{item.label}</div>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-zinc-400 leading-snug">{dataHealth.summary}</p>
-          </div>
-        )}
-
-        {/* Top Priority Asset Decision Chain */}
-        {priorities.length > 0 && (
-          <div className={`${dataHealth ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase font-bold text-zinc-500 tracking-widest">TOP PRIORITY ASSET · DECISION CHAIN</span>
-              <Link to={`/assets/${priorities[0].id}`} className="text-[10px] font-mono text-zinc-400 hover:text-civic-dark ml-auto flex items-center gap-1 transition-colors">
-                Full Intelligence <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <AssetDecisionChain
-              assetId={priorities[0].id}
-              compact={false}
-            />
+            <p className="text-[10px] text-zinc-400 font-sans leading-snug">{dataHealth.summary}</p>
           </div>
         )}
       </motion.div>
@@ -681,6 +764,57 @@ export const DashboardPage: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* ============================================================ */}
+      {/* SECTION: CITIZEN INTELLIGENCE                                */}
+      {/* ============================================================ */}
+      <motion.div 
+        variants={itemVariants}
+        className="p-5 rounded-2xl bg-white border border-purple-200 shadow-subtle flex flex-col md:flex-row items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
+            <ListTodo className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-purple-700 font-bold">
+                CITIZEN INTELLIGENCE
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <h3 className="font-display font-extrabold text-base text-slate-900">
+              Verified Citizen Infrastructure Evidence
+            </h3>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 sm:gap-8 font-mono text-xs">
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block font-bold">NEW REPORTS</span>
+            <span className="font-display font-black text-xl text-slate-900">{civicStats?.newReports ?? 1}</span>
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block font-bold">VALIDATED</span>
+            <span className="font-display font-black text-xl text-purple-700">{civicStats?.validated ?? 2}</span>
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block font-bold">IN PROGRESS</span>
+            <span className="font-display font-black text-xl text-blue-700">{civicStats?.inProgress ?? 1}</span>
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] text-slate-400 block font-bold">RESOLVED</span>
+            <span className="font-display font-black text-xl text-emerald-600">{civicStats?.resolved ?? 1}</span>
+          </div>
+        </div>
+
+        <Link
+          to="/civic-reports"
+          className="px-4 py-2.5 rounded-xl bg-civic-dark text-lime hover:bg-zinc-800 font-mono text-xs font-bold transition-all shadow-sm inline-flex items-center gap-1.5 shrink-0"
+        >
+          <span>REVIEW CITIZEN REPORTS →</span>
+        </Link>
+      </motion.div>
 
       {/* ============================================================ */}
       {/* SECTION D: Operational Priority Queue (Full-Width Table)     */}

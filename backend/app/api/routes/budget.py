@@ -44,6 +44,7 @@ def optimize_budget(
     return result
 
 
+@router.get("/budget/scenarios")
 @router.post("/budget/scenarios")
 def get_budget_scenarios(
     db: Session = Depends(get_db)

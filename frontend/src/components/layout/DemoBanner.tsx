@@ -1,28 +1,33 @@
 import React from 'react';
-import { AlertTriangle, Info } from 'lucide-react';
+import { ShieldCheck, Activity } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const DemoBanner: React.FC = () => {
+  const { isCitizen, user } = useAuth();
+
   return (
-    <div className="bg-slate-900 text-slate-200 text-xs py-1.5 px-4 flex items-center justify-between border-b border-slate-800 no-print">
+    <div className="bg-zinc-950 text-zinc-300 text-xs py-1.5 px-4 flex items-center justify-between border-b border-zinc-800 no-print font-mono">
       <div className="flex items-center gap-2 max-w-7xl mx-auto w-full justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded">
-            SMART CITY DIGITAL TWIN
+          <span className="bg-lime text-civic-dark text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">
+            {isCitizen ? "CITIZEN CIVIC PORTAL" : "SMART CITY DIGITAL TWIN"}
           </span>
-          <span className="text-slate-300 font-mono text-xs hidden sm:inline">
-            Coimbatore Municipal Corporation • 78 IoT Spatial Telemetry Nodes Active
+          <span className="text-zinc-300 text-xs hidden sm:inline font-medium">
+            {isCitizen
+              ? `Coimbatore Corporation • ${user?.ward || 'Ward 24 (Gandhipuram)'} Active`
+              : "Coimbatore Municipal Corporation • 78 Infrastructure Corridors Monitored"}
           </span>
-          <span className="text-slate-300 font-mono text-xs sm:hidden">
+          <span className="text-zinc-300 text-xs sm:hidden">
             Coimbatore Smart City
           </span>
         </div>
-        <div className="flex items-center gap-4 text-[11px] font-mono text-slate-300">
-          <span className="flex items-center gap-1.5 text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            GIS Live Feed
+        <div className="flex items-center gap-4 text-[11px] text-zinc-400">
+          <span className="flex items-center gap-1.5 text-lime font-bold">
+            <span className="w-2 h-2 rounded-full bg-lime animate-pulse"></span>
+            GIS Live Spatial Feed
           </span>
-          <span className="hidden md:inline text-slate-500">|</span>
-          <span className="hidden md:inline text-blue-300">RDD2022 AI Inference 96.4%</span>
+          <span className="hidden md:inline text-zinc-600">|</span>
+          <span className="hidden md:inline text-zinc-300 font-bold">RDD2022 AI Inspection Active</span>
         </div>
       </div>
     </div>

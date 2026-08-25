@@ -4,7 +4,7 @@ from sqlalchemy import or_
 from typing import List, Optional
 
 from backend.app.api.dependencies import get_db
-from backend.app.models.models import Asset, MaintenanceRecord, InfrastructureReport
+from backend.app.models.models import Asset, MaintenanceRecord, InfrastructureReport, CitizenReport
 from backend.app.schemas.schemas import (
     AssetResponse,
     MaintenanceRecordResponse,
@@ -13,7 +13,8 @@ from backend.app.schemas.schemas import (
     DetectedIssue,
     InspectionAnalyzeResponse,
     AssetRiskExplanationResponse,
-    RiskDriver
+    RiskDriver,
+    AssetEvidenceSummary
 )
 from backend.app.algorithms.risk_engine import RiskEngine
 from backend.app.algorithms.budget_optimizer import BudgetOptimizer
@@ -60,6 +61,88 @@ def list_assets(
             )
         )
     return query.order_by(Asset.priority_rank.asc()).offset(offset).limit(limit).all()
+
+@router.get("/map/intelligence")
+def get_map_intelligence(
+    north: Optional[float] = None,
+    south: Optional[float] = None,
+    east: Optional[float] = None,
+    west: Optional[float] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Consolidated lightweight GIS intelligence endpoint returning infrastructure assets and citizen reports.
+    """
+    asset_query = db.query(Asset)
+    if north is not None and south is not None and east is not None and west is not None:
+        asset_query = asset_query.filter(
+            Asset.latitude >= south,
+            Asset.latitude <= north,
+            Asset.longitude >= west,
+            Asset.longitude <= east
+        )
+    assets = asset_query.all()
+
+    report_query = db.query(CitizenReport)
+    if north is not None and south is not None and east is not None and west is not None:
+        report_query = report_query.filter(
+            CitizenReport.latitude >= south,
+            CitizenReport.latitude <= north,
+            CitizenReport.longitude >= west,
+            CitizenReport.longitude <= east
+        )
+    reports = report_query.all()
+
+    return {
+        "assets": [
+            {
+                "id": a.id,
+                "asset_id": a.asset_id,
+                "name": a.name,
+                "type": a.asset_type,
+                "location": a.location,
+                "zone": a.zone,
+                "latitude": a.latitude,
+                "longitude": a.longitude,
+                "risk_level": a.risk_level,
+                "risk_score": a.risk_score,
+                "condition_score": a.condition_score,
+                "priority": f"P{a.priority_rank or 2}",
+                "recommended_action": a.recommended_action,
+                "estimated_repair_cost": a.estimated_repair_cost
+            }
+            for a in assets
+        ],
+        "reports": [
+            {
+                "id": r.id,
+                "report_id": r.report_id,
+                "category": r.category,
+                "description": r.description,
+                "photo_url": r.photo_url,
+                "latitude": r.latitude,
+                "longitude": r.longitude,
+                "location_name": r.location_name,
+                "zone": r.zone,
+                "severity": r.severity,
+                "status": r.status,
+                "validation_score": r.validation_score,
+                "validation_status": r.validation_status,
+                "nearest_asset_id": r.nearest_asset_id,
+                "nearest_asset_distance_m": r.nearest_asset_distance_m,
+                "asset_link_status": r.asset_link_status,
+                "created_at": r.created_at
+            }
+            for r in reports
+        ],
+        "summary": {
+            "total_assets": len(assets),
+            "total_reports": len(reports),
+            "critical_assets": len([a for a in assets if a.risk_level == "CRITICAL"]),
+            "high_risk_assets": len([a for a in assets if a.risk_level == "HIGH"]),
+            "active_reports": len([r for r in reports if r.status in ["SUBMITTED", "UNDER_REVIEW", "VALIDATED", "ASSIGNED", "IN_PROGRESS"]])
+        }
+    }
 
 @router.get("/assets/{asset_id}", response_model=AssetResponse)
 def get_asset(
@@ -519,3 +602,50 @@ def get_asset_decision_chain(
             "final_decision": final_decision
         }
     }
+
+
+@router.get("/assets/{asset_id}/civic-reports")
+def get_asset_civic_reports(
+    asset_id: str,
+    db: Session = Depends(get_db)
+):
+    """Retrieve all citizen observations linked or correlated with this municipal infrastructure asset."""
+    asset = find_asset_or_404(asset_id, db)
+    reports = db.query(CitizenReport).filter(
+        (CitizenReport.nearest_asset_id == asset.asset_id) | (CitizenReport.nearest_asset_id == str(asset.id))
+    ).order_by(CitizenReport.created_at.desc()).all()
+
+    total = len(reports)
+    validated = sum(1 for r in reports if r.status in ["VALIDATED", "ASSIGNED", "IN_PROGRESS", "RESOLVED"])
+    under_review = sum(1 for r in reports if r.status in ["SUBMITTED", "UNDER_REVIEW"])
+    in_progress = sum(1 for r in reports if r.status == "IN_PROGRESS")
+    resolved = sum(1 for r in reports if r.status == "RESOLVED")
+
+    # Common category
+    cats = {}
+    for r in reports:
+        cats[r.category] = cats.get(r.category, 0) + 1
+    common_category = max(cats, key=cats.get) if cats else None
+
+    latest_date = reports[0].created_at.strftime("%b %d, %Y") if reports else None
+
+    evidence_context = (
+        f"{validated} validated citizen reports corroborate structural wear on corridor {asset.name}."
+        if validated > 0
+        else f"No active citizen observations recorded within monitored corridor {asset.asset_id}."
+    )
+
+    from backend.app.api.routes.civic_reports import _format_report_dict
+    return {
+        "asset_id": asset.asset_id,
+        "total_reports": total,
+        "validated_reports": validated,
+        "under_review_reports": under_review,
+        "in_progress_reports": in_progress,
+        "resolved_reports": resolved,
+        "common_category": common_category,
+        "latest_observation_date": latest_date,
+        "evidence_context": evidence_context,
+        "reports": [_format_report_dict(r) for r in reports]
+    }
+

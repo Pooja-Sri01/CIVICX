@@ -3,7 +3,22 @@ from backend.app.models.models import (
     MaintenanceRecord,
     InfrastructureReport,
     BudgetScenario,
-    SimulationScenario
+    SimulationScenario,
+    CitizenUser,
+    CitizenReport,
+    CitizenReportEvent,
+    CitizenReward,
+    AuditEvent,
+    RiskAssessment,
+    DecisionRecord,
+    RewardLedger,
+    DataSource,
+    TelemetryRecord,
+    AIInspection,
+    AIInspectionFeedback,
+    DeteriorationForecastRecord,
+    DigitalTwinScenario,
+    MunicipalActionItem
 )
 
 __all__ = [
@@ -11,5 +26,23 @@ __all__ = [
     "MaintenanceRecord",
     "InfrastructureReport",
     "BudgetScenario",
-    "SimulationScenario"
+    "SimulationScenario",
+    "CitizenUser",
+    "CitizenReport",
+    "CitizenReportEvent",
+    "CitizenReward",
+    "AuditEvent",
+    "RiskAssessment",
+    "DecisionRecord",
+    "RewardLedger",
+    "DataSource",
+    "TelemetryRecord",
+    "AIInspection",
+    "AIInspectionFeedback",
+    "DeteriorationForecastRecord",
+    "DigitalTwinScenario",
+    "MunicipalActionItem"
 ]
+
+
+

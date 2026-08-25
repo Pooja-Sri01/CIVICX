@@ -16,6 +16,7 @@ import { ApiService } from '../services/api';
 import { Asset, RiskLevel } from '../types';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { formatINR, getConditionStatus } from '../utils/formatters';
+import { getAssetImage, handleImageError } from '../utils/imageFallback';
 
 export const AssetsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -174,8 +175,9 @@ export const AssetsPage: React.FC = () => {
                 {/* Image & Risk Banner */}
                 <div className="relative h-40 bg-zinc-900 overflow-hidden">
                   <img
-                    src={asset.image}
+                    src={getAssetImage(asset.image, asset.type)}
                     alt={asset.name}
+                    onError={(e) => handleImageError(e, asset.type)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />

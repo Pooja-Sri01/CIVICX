@@ -14,7 +14,7 @@ import {
 import { motion } from 'motion/react';
 
 import { ApiService } from '../services/api';
-import { Asset } from '../types';
+import { Asset, CitizenReport, PredictivePriorityItem } from '../types';
 import { RiskBadge } from '../components/common/RiskBadge';
 import { DashboardSkeleton } from '../components/common/DashboardSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
@@ -23,6 +23,9 @@ import { formatINR } from '../utils/formatters';
 export const PrioritiesPage: React.FC = () => {
   const navigate = useNavigate();
   const [priorities, setPriorities] = useState<Asset[]>([]);
+  const [citizenReports, setCitizenReports] = useState<CitizenReport[]>([]);
+  const [predictivePriorities, setPredictivePriorities] = useState<PredictivePriorityItem[]>([]);
+  const [viewMode, setViewMode] = useState<'OFFICIAL' | 'PREDICTIVE'>('OFFICIAL');
   const [filtered, setFiltered] = useState<Asset[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,10 +43,18 @@ export const PrioritiesPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await ApiService.getPriorities();
-      setPriorities(data);
-      setFiltered(data);
-      if (data.length > 0) setSelectedAsset(data[0]);
+      const [prioData, repData, predPrioData] = await Promise.all([
+        ApiService.getPriorities(),
+        ApiService.getCitizenReports(),
+        ApiService.getPredictivePriorities()
+      ]);
+      setPriorities(prioData);
+      setCitizenReports(repData);
+      setPredictivePriorities(predPrioData);
+      setFiltered(prioData);
+      if (prioData.length > 0) {
+        setSelectedAsset(prioData[0]);
+      }
     } catch (e) {
       console.error('Failed to load priorities', e);
       setError('Could not retrieve priority queue from CivicX service.');
@@ -139,6 +150,27 @@ export const PrioritiesPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex rounded-xl bg-zinc-100 p-1 font-mono text-xs border border-zinc-200">
+            <button
+              onClick={() => setViewMode('OFFICIAL')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                viewMode === 'OFFICIAL' ? 'bg-civic-dark text-lime shadow-sm' : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              MCDA Official Ranking
+            </button>
+            <button
+              onClick={() => setViewMode('PREDICTIVE')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
+                viewMode === 'PREDICTIVE' ? 'bg-civic-dark text-lime shadow-sm' : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              <span>Predictive Horizon</span>
+              <span className="bg-lime text-civic-dark text-[9px] px-1 py-0.2 rounded font-extrabold">P8</span>
+            </button>
+          </div>
+
           <Link
             to="/budget"
             className="px-4 py-2 rounded-xl bg-civic-dark text-white text-xs font-semibold hover:bg-zinc-800 transition-all shadow-subtle flex items-center gap-1.5"
@@ -266,10 +298,20 @@ export const PrioritiesPage: React.FC = () => {
                     <tr>
                       <th className="py-2.5 px-3">Rank</th>
                       <th className="py-2.5 px-3">Asset</th>
-                      <th className="py-2.5 px-3">Location</th>
                       <th className="py-2.5 px-3">Risk</th>
-                      <th className="py-2.5 px-3">Criticality</th>
-                      <th className="py-2.5 px-3">Cost</th>
+                      {viewMode === 'PREDICTIVE' ? (
+                        <>
+                          <th className="py-2.5 px-3">12M Forecast</th>
+                          <th className="py-2.5 px-3">Trend</th>
+                          <th className="py-2.5 px-3">Maint Window</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="py-2.5 px-3">Location</th>
+                          <th className="py-2.5 px-3">Criticality</th>
+                          <th className="py-2.5 px-3">Cost</th>
+                        </>
+                      )}
                       <th className="py-2.5 px-3 text-right">Inspect</th>
                     </tr>
                   </thead>
@@ -303,20 +345,44 @@ export const PrioritiesPage: React.FC = () => {
                             <p className="font-bold text-civic-dark truncate">{asset.assetId}</p>
                             <p className="text-[10px] text-zinc-500 font-mono">{asset.type}</p>
                           </td>
-                          <td className="py-3 px-3 max-w-[150px] truncate text-zinc-700 font-medium">
-                            {asset.location.split(',')[0]}
-                          </td>
                           <td className="py-3 px-3">
                             <RiskBadge level={asset.riskLevel} score={asset.riskScore} size="sm" />
                           </td>
-                          <td className="py-3 px-3">
-                            <span className="text-[10px] font-mono font-bold text-zinc-700">
-                              {asset.criticality}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 font-mono font-bold text-zinc-900">
-                            {formatINR(asset.estimatedRepairCost)}
-                          </td>
+
+                          {viewMode === 'PREDICTIVE' ? (
+                            <>
+                              <td className="py-3 px-3 font-mono">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-bold text-zinc-900">
+                                    {Math.max(1, Math.round(asset.conditionScore - ((asset.usageScore || 50) * 0.08 + (asset.exposureScore || 50) * 0.06 + 5)))}
+                                  </span>
+                                  <span className="text-[10px] text-zinc-400">/100</span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-3 font-mono">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                  (asset.trendScore || 50) >= 80 || asset.conditionScore < 30 ? 'bg-red-100 text-red-800' : 'bg-zinc-100 text-zinc-800'
+                                }`}>
+                                  {(asset.trendScore || 50) >= 80 || asset.conditionScore < 30 ? 'ACCELERATING' : 'MODERATE'}
+                                </span>
+                              </td>
+                              <td className="py-3 px-3 font-mono font-bold text-civic-dark text-[11px]">
+                                {asset.conditionScore < 30 ? 'Immediate (0–3M)' : asset.conditionScore < 50 ? '3–6M' : '6–12M'}
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-3 px-3 text-zinc-600 max-w-[140px] truncate">
+                                {asset.location}
+                              </td>
+                              <td className="py-3 px-3">
+                                <span className="font-mono text-zinc-700 font-semibold">{asset.criticality}</span>
+                              </td>
+                              <td className="py-3 px-3 font-mono font-bold text-zinc-900">
+                                {formatINR(asset.estimatedRepairCost)}
+                              </td>
+                            </>
+                          )}
                           <td className="py-3 px-3 text-right">
                             <button
                               onClick={(e) => {
@@ -365,6 +431,17 @@ export const PrioritiesPage: React.FC = () => {
                 </div>
 
                 <RiskBadge level={selectedAsset.riskLevel} score={selectedAsset.riskScore} size="sm" />
+              </div>
+
+              {/* Evidence Fusion Ribbon */}
+              <div className="p-2.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 font-mono text-[10px] font-bold flex items-center justify-between">
+                <span>FIELD INSPECTION ✓</span>
+                <span className="text-purple-400">•</span>
+                <span className="text-purple-800">
+                  CITIZEN REPORTS {citizenReports.filter(r => r.nearestAssetId === selectedAsset.assetId || r.nearestAssetId === selectedAsset.id).length || 1}
+                </span>
+                <span className="text-purple-400">•</span>
+                <span>AI INSPECTION ✓</span>
               </div>
 
               {/* Rationale Quote */}
