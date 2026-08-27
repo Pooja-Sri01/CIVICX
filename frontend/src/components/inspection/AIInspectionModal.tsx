@@ -27,7 +27,7 @@ import {
 import { ApiService } from '../../services/api';
 import { AIInspection, AIDetection, Asset, CitizenReport } from '../../types';
 import { formatINR } from '../../utils/formatters';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
 
 interface AIInspectionModalProps {
   isOpen: boolean;
@@ -320,18 +320,17 @@ export const AIInspectionModal: React.FC<AIInspectionModalProps> = ({
 
                     {/* Image Viewport with Bounding Box Overlays */}
                     <div className="relative aspect-[16/10] bg-zinc-900 overflow-hidden group">
-                      {previewUrl ? (
+                      {previewUrl && (isUserUploadedPhoto(previewUrl) || previewUrl.startsWith('blob:') || previewUrl.startsWith('data:')) ? (
                         <img
-                          src={getAssetImage(previewUrl, assetContext?.type || reportContext?.category || 'Road')}
+                          src={previewUrl}
                           alt="Infrastructure Inspection Evidence"
-                          onError={(e) => handleImageError(e, assetContext?.type || reportContext?.category || 'Road')}
                           className="w-full h-full object-cover object-center"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 space-y-2 p-6 text-center">
                           <UploadCloud className="w-10 h-10 text-zinc-600" />
-                          <p className="text-xs font-mono font-bold text-zinc-400">NO IMAGE SELECTED</p>
-                          <p className="text-[11px] text-zinc-500 font-sans">Upload an inspection image or select from existing citizen reports.</p>
+                          <p className="text-xs font-mono font-bold text-zinc-400">NO INSPECTION IMAGE LOADED</p>
+                          <p className="text-[11px] text-zinc-500 font-sans">Upload a field inspection photo from your device to run RDD2022 computer vision analysis.</p>
                         </div>
                       )}
 

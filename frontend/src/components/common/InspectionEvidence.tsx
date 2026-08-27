@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Scan, Sparkles, CheckCircle2, ShieldAlert, Cpu, Database, Binary, Info } from 'lucide-react';
 import { BoundingBox } from '../../types';
 import { InspectionAnalysisResult } from '../../services/api';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
 
 interface InspectionEvidenceProps {
   imageSrc: string;
@@ -30,6 +30,8 @@ export const InspectionEvidence: React.FC<InspectionEvidenceProps> = ({
   const displayConfidence = aiAnalysis?.confidence ? Math.round(aiAnalysis.confidence * 100) : 94;
   const displaySeverity = aiAnalysis?.severity || (conditionScore < 40 ? 'CRITICAL' : conditionScore < 60 ? 'HIGH' : 'MEDIUM');
   const displayDesc = aiAnalysis?.description || 'Visible surface distress, crack propagation, and asphalt raveling detected in the monitored sector.';
+
+  const hasPhoto = isUserUploadedPhoto(imageSrc);
 
   return (
     <div className="space-y-6">
@@ -98,78 +100,76 @@ export const InspectionEvidence: React.FC<InspectionEvidenceProps> = ({
               </button>
             )}
 
-            <button
-              onClick={() => setShowBoxes(!showBoxes)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors shadow-subtle font-mono"
-            >
-              {showBoxes ? (
-                <>
-                  <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>Original Photo</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>AI Analysis</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-
-        {/* Image inspection canvas */}
-        <div className="relative bg-zinc-950 overflow-hidden group aspect-[16/9]">
-          <img
-            src={getAssetImage(imageSrc, displayDamage)}
-            alt="Infrastructure AI Damage Inspection"
-            onError={(e) => handleImageError(e, displayDamage)}
-            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.01]"
-          />
-
-          {/* Bounding box overlays */}
-          {showBoxes &&
-            bboxes.map((box, idx) => (
-              <div
-                key={idx}
-                onMouseEnter={() => setActiveBox(idx)}
-                onMouseLeave={() => setActiveBox(null)}
-                style={{
-                  left: `${box.x}%`,
-                  top: `${box.y}%`,
-                  width: `${box.width}%`,
-                  height: `${box.height}%`,
-                }}
-                className={`absolute border-2 transition-all cursor-pointer ${
-                  activeBox === idx
-                    ? 'border-lime bg-lime/20 shadow-lime-glow z-20'
-                    : 'border-red-500 bg-red-500/15 z-10'
-                }`}
+            {hasPhoto && (
+              <button
+                onClick={() => setShowBoxes(!showBoxes)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors shadow-subtle font-mono"
               >
-                {/* Defect Label */}
-                <div className="absolute -top-7 left-0 bg-civic-dark text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-card flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1.5 h-1.5 rounded-full bg-lime" />
-                  <span className="font-bold">{box.label}</span>
-                  <span className="text-lime font-mono">
-                    {Math.round(box.confidence * 100)}%
-                  </span>
-                </div>
-              </div>
-            ))}
-
-          {/* Status Pill on bottom left */}
-          <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-md border border-white/15 text-white px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono">
-            <Sparkles className="w-3.5 h-3.5 text-lime" />
-            <span className="font-medium text-[11px]">
-              {displayDamage}
-            </span>
-          </div>
-
-          {/* Model Transparency Disclaimer pill */}
-          <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md border border-white/10 text-zinc-300 px-2.5 py-1 rounded-lg text-[10px] font-mono">
-            Analytical Vision Pipeline
+                {showBoxes ? (
+                  <>
+                    <EyeOff className="w-3.5 h-3.5 text-zinc-500" />
+                    <span>Original Photo</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-3.5 h-3.5 text-zinc-500" />
+                    <span>AI Analysis</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* Real photo inspection canvas if photo exists */}
+        {hasPhoto && (
+          <div className="relative bg-zinc-950 overflow-hidden group aspect-[16/9]">
+            <img
+              src={imageSrc}
+              alt="Infrastructure AI Damage Inspection"
+              onError={(e) => handleImageError(e, displayDamage)}
+              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.01]"
+            />
+
+            {/* Bounding box overlays */}
+            {showBoxes &&
+              bboxes.map((box, idx) => (
+                <div
+                  key={idx}
+                  onMouseEnter={() => setActiveBox(idx)}
+                  onMouseLeave={() => setActiveBox(null)}
+                  style={{
+                    left: `${box.x}%`,
+                    top: `${box.y}%`,
+                    width: `${box.width}%`,
+                    height: `${box.height}%`,
+                  }}
+                  className={`absolute border-2 transition-all cursor-pointer ${
+                    activeBox === idx
+                      ? 'border-lime bg-lime/20 shadow-lime-glow z-20'
+                      : 'border-red-500 bg-red-500/15 z-10'
+                  }`}
+                >
+                  <div className="absolute -top-7 left-0 bg-civic-dark text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-card flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="w-1.5 h-1.5 rounded-full bg-lime" />
+                    <span className="font-bold">{box.label}</span>
+                    <span className="text-lime font-mono">
+                      {Math.round(box.confidence * 100)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+
+            <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-md border border-white/15 text-white px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs font-mono">
+              <Sparkles className="w-3.5 h-3.5 text-lime" />
+              <span className="font-medium text-[11px]">{displayDamage}</span>
+            </div>
+
+            <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-md border border-white/10 text-zinc-300 px-2.5 py-1 rounded-lg text-[10px] font-mono">
+              Analytical Vision Pipeline
+            </div>
+          </div>
+        )}
 
         {/* Structured Computer Vision Telemetry Panel */}
         <div className="p-5 bg-white border-t border-zinc-200 space-y-4">
@@ -222,4 +222,3 @@ export const InspectionEvidence: React.FC<InspectionEvidenceProps> = ({
     </div>
   );
 };
-

@@ -8,9 +8,10 @@ import {
   User, 
   Building2, 
   AlertCircle,
-  CheckCircle2,
-  Zap,
-  BadgeCheck
+  CheckCircle2, 
+  Zap, 
+  BadgeCheck,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -26,6 +27,19 @@ export const RegisterPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [autoFilled, setAutoFilled] = useState(false);
+
+  const handleAutoFill = () => {
+    setName('Er. M. Senthil Nathan');
+    setOrganization('Coimbatore City Corporation');
+    setRole('Assistant Executive Engineer (Works)');
+    setEmail('senthil.nathan@coimbatore.gov.in');
+    setPassword('civicx2026');
+    setConfirmPassword('civicx2026');
+    setError(null);
+    setAutoFilled(true);
+    setTimeout(() => setAutoFilled(false), 3000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,22 +79,44 @@ export const RegisterPage: React.FC = () => {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-canvas flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <div className="w-full max-w-xl rounded-3xl bg-white border border-zinc-200 shadow-elevated p-8 sm:p-10 space-y-6">
-        <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
-              GOVERNMENT ONBOARDING
-            </span>
-            <span className="bg-lime text-civic-dark text-[9px] font-mono font-bold px-2 py-0.5 rounded">
-              OFFICIAL REGISTRATION
-            </span>
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+                GOVERNMENT ONBOARDING
+              </span>
+              <span className="bg-lime text-civic-dark text-[9px] font-mono font-bold px-2 py-0.5 rounded">
+                OFFICIAL REGISTRATION
+              </span>
+            </div>
+            <h1 className="font-display font-black text-2xl text-civic-dark tracking-tight">
+              REGISTER MUNICIPAL OFFICER
+            </h1>
+            <p className="text-xs text-zinc-500 mt-1">
+              Provision authorized credentials to access Coimbatore’s infrastructure decision workspace.
+            </p>
           </div>
-          <h1 className="font-display font-black text-2xl text-civic-dark tracking-tight">
-            REGISTER MUNICIPAL OFFICER
-          </h1>
-          <p className="text-xs text-zinc-500 mt-1">
-            Provision authorized credentials to access Coimbatore’s infrastructure decision workspace.
-          </p>
+
+          <button
+            type="button"
+            onClick={handleAutoFill}
+            className="px-3 py-1.5 rounded-xl bg-zinc-900 text-lime hover:bg-zinc-800 text-[10px] font-mono font-bold transition-all flex items-center gap-1.5 shadow-sm flex-shrink-0"
+            title="Auto-fill sample officer details for testing"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-lime" />
+            <span>⚡ Demo Auto-Fill</span>
+          </button>
         </div>
+
+        {autoFilled && (
+          <div className="py-2 px-3 rounded-xl bg-lime/15 border border-lime/40 text-civic-dark text-xs font-mono font-bold flex items-center justify-between animate-fadeIn">
+            <span className="flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-lime-dark" />
+              <span>Demo Municipal Officer details populated!</span>
+            </span>
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500">Ready to Submit</span>
+          </div>
+        )}
 
         {error && (
           <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-start gap-2">

@@ -14,13 +14,14 @@ import {
   Info,
   Clock,
   RotateCcw,
+  X,
   Image as ImageIcon
 } from 'lucide-react';
 import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { LocationPickerMap } from '../../components/citizen/LocationPickerMap';
 import { ApiService } from '../../services/api';
 import { CitizenReport } from '../../types';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { useAuth } from '../../context/AuthContext';
 
 const CATEGORIES = [
   'Pothole',
@@ -32,27 +33,6 @@ const CATEGORIES = [
   'Other Infrastructure'
 ];
 
-const SAMPLE_PHOTOS = [
-  {
-    label: 'Pothole Cluster',
-    url: 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    label: 'Flooded Drain',
-    url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    label: 'Road Fatigue',
-    url: 'https://images.unsplash.com/photo-1578991624414-276ef23a534f?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    label: 'Flyover Joint',
-    url: 'https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?auto=format&fit=crop&w=800&q=80'
-  }
-];
-
-import { useAuth } from '../../context/AuthContext';
-
 export const CitizenReportPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -60,7 +40,7 @@ export const CitizenReportPage: React.FC = () => {
   // Form State
   const [category, setCategory] = useState('Pothole');
   const [description, setDescription] = useState('');
-  const [photoUrl, setPhotoUrl] = useState<string>(SAMPLE_PHOTOS[0].url);
+  const [photoUrl, setPhotoUrl] = useState<string>('');
   const [latitude, setLatitude] = useState(11.0168);
   const [longitude, setLongitude] = useState(76.9673);
   const [locationName, setLocationName] = useState('Gandhipuram Cross Cut Road, Coimbatore');
@@ -90,7 +70,7 @@ export const CitizenReportPage: React.FC = () => {
       const result = await ApiService.submitCitizenReport({
         category,
         description,
-        photoUrl,
+        photoUrl: photoUrl || undefined,
         latitude,
         longitude,
         locationName,
@@ -119,180 +99,127 @@ export const CitizenReportPage: React.FC = () => {
     }
   };
 
-  const resetForm = () => {
-    setSubmittedReport(null);
-    setDescription('');
-    setCategory('Pothole');
-    setPhotoUrl(SAMPLE_PHOTOS[0].url);
-  };
-
   return (
-    <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-canvas pb-16">
       <CitizenNavbar />
 
       <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
-        {/* Header Title */}
+        {/* Header */}
         <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 font-mono text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>INFRASTRUCTURE INCIDENT INTAKE</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime/20 text-civic-dark border border-lime text-xs font-mono font-bold">
+            <Sparkles className="w-3.5 h-3.5 text-lime-dark" />
+            <span>COMMUNITY INFRASTRUCTURE WATCH</span>
           </div>
-          <h1 className="font-display font-black text-3xl sm:text-4xl text-slate-900">
-            Submit a Civic Infrastructure Report
+          <h1 className="font-display font-black text-2xl sm:text-4xl text-slate-900 tracking-tight">
+            Report Civic Infrastructure Issue
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600">
-            Your report provides structured spatial evidence to help municipal engineers detect, prioritize, and repair civic defects.
+          <p className="text-xs sm:text-sm text-slate-600 font-sans">
+            Directly report potholes, broken drainage, failed lighting, or road damage to the Coimbatore City Municipal Corporation. Earn CIVICX Civic Points for verified reports.
           </p>
         </div>
 
-        {/* Authentication Requirement Gate for Fresh Visitors */}
-        {!isAuthenticated || !user ? (
-          <div className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6 text-center max-w-lg mx-auto">
-            <div className="w-16 h-16 rounded-3xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center mx-auto shadow-sm">
-              <ShieldCheck className="w-8 h-8" />
+        {/* Guest Banner if not signed in */}
+        {!isAuthenticated && (
+          <div className="p-4 mb-6 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-medium">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                You are submitting as a <strong>Guest Citizen</strong>. Sign in to tie this report to your profile and claim +100 Civic Points upon validation.
+              </span>
             </div>
-            <div className="space-y-2">
-              <h2 className="font-display font-black text-2xl text-slate-900">
-                Citizen Sign In Required
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Please sign in or create a verified Citizen account to submit infrastructure observations, track repair progression, and earn civic tokens.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Link
                 to="/login?redirect=/citizen/report"
-                className="flex-1 py-3 px-4 rounded-2xl bg-civic-dark text-lime font-display font-black text-sm hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-subtle"
+                className="px-3 py-1.5 rounded-xl bg-amber-600 text-white font-bold font-mono text-xs hover:bg-amber-700 transition-colors"
               >
-                <span>Sign In</span>
-                <ArrowRight className="w-4 h-4" />
+                Sign In
               </Link>
               <Link
                 to="/login?redirect=/citizen/report"
-                className="flex-1 py-3 px-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-display font-bold text-sm transition-all flex items-center justify-center gap-2"
+                className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-800 font-bold font-mono text-xs hover:bg-amber-100 transition-colors"
               >
-                <span>Create Account</span>
+                Register
               </Link>
             </div>
           </div>
-        ) : (
-          <>
+        )}
+
+        {/* Success Modal / Screen */}
         <AnimatePresence>
           {submittedReport && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6 mb-8 text-center"
+              className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6 text-center max-w-lg mx-auto"
             >
-              <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center mx-auto shadow-sm">
-                <CheckCircle2 className="w-9 h-9" />
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-10 h-10" />
               </div>
 
               <div className="space-y-2">
-                <span className="text-xs font-mono font-bold text-emerald-600 uppercase tracking-wider block">
-                  Report Submitted ✓
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                  Report ID: {submittedReport.reportId}
                 </span>
-                <h2 className="font-display font-black text-2xl sm:text-3xl text-slate-900">
-                  {submittedReport.reportId}
+                <h2 className="font-display font-black text-2xl text-slate-900">
+                  Report Successfully Registered!
                 </h2>
-                <p className="text-xs font-mono text-slate-500 max-w-md mx-auto">
-                  “Your report has entered the CIVICX verification pipeline.”
+                <p className="text-xs text-slate-600">
+                  Your report has been ingested into Coimbatore’s municipal decision pipeline. Deterministic validation scored it at <strong className="text-slate-900">{submittedReport.validationScore}/100</strong>.
                 </p>
               </div>
 
-              {/* Status Timeline */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 max-w-lg mx-auto">
-                <div className="flex items-center justify-between font-mono text-xs font-bold text-slate-700">
-                  <div className="flex items-center gap-1.5 text-emerald-700">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Submitted</span>
-                  </div>
-                  <span className="text-slate-300">→</span>
-                  <div className="flex items-center gap-1.5 text-purple-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-purple-600 animate-pulse" />
-                    <span>Under Review</span>
-                  </div>
-                  <span className="text-slate-300">→</span>
-                  <span className="text-slate-400">Validated</span>
-                  <span className="text-slate-300">→</span>
-                  <span className="text-slate-400">Action</span>
-                  <span className="text-slate-300">→</span>
-                  <span className="text-slate-400">Resolved</span>
+              {/* Reward points callout */}
+              <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-purple-950 font-mono text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span>Submission Reward:</span>
+                  <span className="font-bold text-purple-700">+10 Points</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Potential Validation Reward:</span>
+                  <span className="font-bold text-purple-700">+50 Points</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Municipal Resolution Reward:</span>
+                  <span className="font-bold text-purple-700">+250 Points</span>
                 </div>
               </div>
 
-              {/* Validation Score & Correlated Asset Preview */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg mx-auto text-left">
-                <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-100 space-y-1">
-                  <span className="text-[10px] font-mono uppercase font-bold text-purple-700 block">
-                    CIVICX Validation Score
-                  </span>
-                  <p className="font-display font-black text-2xl text-purple-900">
-                    {submittedReport.validationScore} / 100
-                  </p>
-                  <span className="text-[10px] font-mono text-purple-700 font-bold block">
-                    Status: {submittedReport.validationStatus}
-                  </span>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 space-y-1">
-                  <span className="text-[10px] font-mono uppercase font-bold text-blue-700 block">
-                    Linked Municipal Asset
-                  </span>
-                  <p className="font-mono font-black text-xl text-blue-900">
-                    {submittedReport.nearestAssetId || 'RD-1042'}
-                  </p>
-                  <span className="text-[10px] font-mono text-blue-700 block">
-                    Distance: ~{submittedReport.nearestAssetDistanceM ?? 184}m
-                  </span>
-                </div>
-              </div>
-
-              {/* Rewards Notice */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-lime/20 border border-lime text-civic-dark font-mono text-xs font-bold">
-                <span>🪙 +10 CIVICX Points Credited to your wallet</span>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                <Link
-                  to="/citizen/reports"
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-civic-dark text-white font-mono text-xs font-bold hover:bg-zinc-800 transition-colors shadow-md flex items-center justify-center gap-2"
-                >
-                  <span>Track My Reports</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-lime" />
-                </Link>
-
-                <Link
-                  to="/map"
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white border border-slate-300 text-slate-800 font-mono text-xs font-bold hover:bg-slate-50 transition-colors"
-                >
-                  View on Civic Map
-                </Link>
-
+              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
                 <button
-                  onClick={resetForm}
-                  className="w-full sm:w-auto px-4 py-3 rounded-xl text-xs font-mono font-bold text-slate-600 hover:text-slate-900 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={() => {
+                    setSubmittedReport(null);
+                    setDescription('');
+                    setPhotoUrl('');
+                  }}
+                  className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold transition-colors"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Submit Another</span>
+                  Submit Another
+                </button>
+                <button
+                  onClick={() => navigate('/citizen/my-reports')}
+                  className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-civic-dark text-lime text-xs font-mono font-bold hover:bg-zinc-800 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <span>Track Status</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Input Form */}
+        {/* Report Form */}
         {!submittedReport && (
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xl space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="p-6 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-8"
+          >
             {/* Category Selector */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
-                Issue Category <span className="text-rose-500">*</span>
+                Select Infrastructure Category <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat}
@@ -321,137 +248,206 @@ export const CitizenReportPage: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe the defect, dimensions, water stagnation, or impact on transit..."
-                className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-lime"
+                className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-lime font-sans"
               />
             </div>
 
-            {/* Photo Telemetry Upload */}
+            {/* Photo Telemetry Upload (Clean Evidence Upload Area) */}
             <div className="space-y-3">
-              <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
-                Photo Evidence (Optional but recommended)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
+                  Photo Evidence
+                </label>
+                <span className="text-[11px] font-mono text-slate-400">
+                  Optional but recommended
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-sans">
+                Upload a photo of the infrastructure issue.
+              </p>
 
-              {/* Sample Preset Photos */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {SAMPLE_PHOTOS.map((sample) => (
-                  <button
-                    key={sample.label}
-                    type="button"
-                    onClick={() => setPhotoUrl(sample.url)}
-                    className={`relative h-20 rounded-2xl overflow-hidden border-2 transition-all group ${
-                      photoUrl === sample.url ? 'border-lime shadow-md' : 'border-slate-200 opacity-70 hover:opacity-100'
-                    }`}
-                  >
+              {photoUrl ? (
+                /* Actual Citizen-Uploaded Photo Preview */
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
+                  <div className="relative h-52 rounded-xl overflow-hidden bg-slate-900 border border-slate-200">
                     <img
-                      src={getAssetImage(sample.url, sample.label)}
-                      alt={sample.label}
-                      onError={(e) => handleImageError(e, sample.label)}
+                      src={photoUrl}
+                      alt="Uploaded Defect Preview"
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-1.5">
-                      <span className="text-[10px] font-mono font-bold text-white leading-tight truncate">
-                        {sample.label}
-                      </span>
+                    <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/75 text-white font-mono text-[10px] flex items-center gap-1.5 backdrop-blur-sm">
+                      <Camera className="w-3 h-3 text-lime" />
+                      <span>Uploaded Photo Evidence</span>
                     </div>
-                  </button>
-                ))}
-              </div>
+                    <button
+                      type="button"
+                      onClick={() => setPhotoUrl('')}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 hover:bg-black text-white transition-colors"
+                      title="Remove photo"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="text-emerald-700 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Image attached</span>
+                    </span>
+                    <label className="text-civic-dark hover:underline font-bold cursor-pointer">
+                      <span>Change photo</span>
+                      <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                /* Clean Upload Dropzone */
+                <div className="p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition-colors flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-xs">
+                    <Camera className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-800 font-mono">
+                      No photographic evidence attached
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-sans mt-0.5">
+                      Clear photos increase validation speed and prioritization accuracy.
+                    </p>
+                  </div>
+                  <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-civic-dark hover:bg-zinc-800 text-lime text-xs font-mono font-bold cursor-pointer transition-all shadow-sm">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload from Device</span>
+                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+                  </label>
+                </div>
+              )}
+            </div>
 
-              {/* Custom Upload or Custom URL */}
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <label className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold cursor-pointer transition-colors border border-slate-300">
-                  <Camera className="w-4 h-4 text-slate-600" />
-                  <span>Upload from Device</span>
-                  <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+            {/* Interactive Location Picker Map */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
+                  Defect Location & Geocoding <span className="text-rose-500">*</span>
                 </label>
+                <span className="text-[10px] font-mono text-slate-500">
+                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Click on the Coimbatore map to pinpoint the exact location of the defect.
+              </p>
 
-                <div className="w-full flex-1 relative">
+              <LocationPickerMap
+                latitude={latitude}
+                longitude={longitude}
+                locationName={locationName}
+                onLocationChange={(lat, lng, locName) => {
+                  setLatitude(lat);
+                  setLongitude(lng);
+                  setLocationName(locName);
+                }}
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div>
+                  <label className="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">
+                    Detected Zone
+                  </label>
                   <input
                     type="text"
-                    placeholder="Or paste photo image URL..."
-                    value={photoUrl}
-                    onChange={(e) => setPhotoUrl(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lime"
+                    readOnly
+                    value={zone}
+                    className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-100 border border-slate-200 text-slate-700"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-mono uppercase text-slate-400 font-bold block mb-1">
+                    Location Description / Landmark
+                  </label>
+                  <input
+                    type="text"
+                    value={locationName}
+                    onChange={(e) => setLocationName(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-50 border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-lime"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Interactive Location Picker Map */}
+            {/* Severity Rating */}
             <div className="space-y-2">
               <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
-                Defect Location <span className="text-rose-500">*</span>
+                Estimated Transit Impact & Hazard Severity
               </label>
-              <LocationPickerMap
-                latitude={latitude}
-                longitude={longitude}
-                locationName={locationName}
-                onLocationChange={(lat, lng, loc) => {
-                  setLatitude(lat);
-                  setLongitude(lng);
-                  setLocationName(loc);
-                }}
-              />
-            </div>
-
-            {/* Optional Severity */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
-                  Observed Severity
-                </label>
-                <select
-                  value={severity}
-                  onChange={(e) => setSeverity(e.target.value as any)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none"
-                >
-                  <option value="Low">Low - Minor aesthetic / small crack</option>
-                  <option value="Medium">Medium - Moderate surface distress</option>
-                  <option value="High">High - Significant pothole or drainage issue</option>
-                  <option value="Critical">Critical - Immediate safety hazard</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block">
-                  Municipal Zone
-                </label>
-                <select
-                  value={zone}
-                  onChange={(e) => setZone(e.target.value)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none"
-                >
-                  <option value="Central Zone">Central Zone (Gandhipuram / Townhall)</option>
-                  <option value="East Zone">East Zone (Peelamedu / Singanallur)</option>
-                  <option value="West Zone">West Zone (RS Puram / Vadavalli)</option>
-                  <option value="North Zone">North Zone (Saravanampatti / Thudiyalur)</option>
-                  <option value="South Zone">South Zone (Kuniyamuthur / Ukkadam)</option>
-                </select>
+              <div className="grid grid-cols-4 gap-2">
+                {(['Low', 'Medium', 'High', 'Critical'] as const).map((sev) => (
+                  <button
+                    key={sev}
+                    type="button"
+                    onClick={() => setSeverity(sev)}
+                    className={`py-2 rounded-xl text-xs font-mono font-bold transition-all border ${
+                      severity === sev
+                        ? sev === 'Critical'
+                          ? 'bg-rose-600 text-white border-rose-600 shadow'
+                          : sev === 'High'
+                          ? 'bg-amber-500 text-white border-amber-500 shadow'
+                          : sev === 'Medium'
+                          ? 'bg-blue-600 text-white border-blue-600 shadow'
+                          : 'bg-emerald-600 text-white border-emerald-600 shadow'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {sev}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Explainability notice */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-2.5 font-sans leading-relaxed">
-              <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-              <span>
-                <strong>CIVICX Verification Policy:</strong> CIVICX will evaluate this report using infrastructure evidence and validation rules. Submissions are screened to prevent duplicate spam and correlate with monitored municipal asset digital twins.
-              </span>
+            {/* Citizen Details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
+              <div>
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block mb-1">
+                  Your Full Name
+                </label>
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  placeholder="e.g. Priya Sundaram"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lime"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 block mb-1">
+                  Your Email Address (For status updates & rewards)
+                </label>
+                <input
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  placeholder="e.g. priya.sundaram@gmail.com"
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-lime"
+                />
+              </div>
             </div>
 
             {/* Submit CTA */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-4 rounded-2xl bg-civic-dark hover:bg-zinc-800 text-white font-display font-bold text-sm tracking-wide shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-              >
-                <Zap className="w-4 h-4 text-lime" />
-                <span>{isSubmitting ? 'SCREENING & SUBMITTING...' : 'SUBMIT CIVIC REPORT'}</span>
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 px-6 rounded-2xl bg-civic-dark text-lime font-display font-black text-sm tracking-wide hover:bg-zinc-800 transition-all flex items-center justify-center gap-2 shadow-elevated disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <RotateCcw className="w-4 h-4 animate-spin" />
+                  <span>INGESTING INTO DECISION ENGINE...</span>
+                </>
+              ) : (
+                <>
+                  <span>TRANSMIT COMPLAINT TO COIMBATORE CORPORATION →</span>
+                </>
+              )}
+            </button>
           </form>
-        )}
-        </>
         )}
       </div>
     </div>

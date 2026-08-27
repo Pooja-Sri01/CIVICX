@@ -21,7 +21,7 @@ import {
 import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { ApiService } from '../../services/api';
 import { CitizenReport, CitizenReportStatus } from '../../types';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
 
 export const CitizenReportDetailPage: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -219,7 +219,7 @@ export const CitizenReportDetailPage: React.FC = () => {
           </div>
 
           {/* Description & Photo Evidence */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+          <div className={`grid gap-6 pt-4 border-t border-slate-100 ${isUserUploadedPhoto(report.photoUrl) ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
             <div className="space-y-3">
               <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider block">
                 Citizen Submitted Observation
@@ -236,14 +236,14 @@ export const CitizenReportDetailPage: React.FC = () => {
               )}
             </div>
 
-            <div className="space-y-3">
-              <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                Visual Inspection Telemetry
-              </span>
-              {report.photoUrl ? (
+            {isUserUploadedPhoto(report.photoUrl) && (
+              <div className="space-y-3">
+                <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                  Citizen Uploaded Evidence
+                </span>
                 <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative group">
                   <img
-                    src={getAssetImage(report.photoUrl, report.category)}
+                    src={report.photoUrl}
                     alt="Infrastructure Inspection Evidence"
                     onError={(e) => handleImageError(e, report.category)}
                     className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -253,13 +253,8 @@ export const CitizenReportDetailPage: React.FC = () => {
                     <span>Visual Evidence Verified</span>
                   </div>
                 </div>
-              ) : (
-                <div className="h-48 rounded-2xl bg-slate-100 border border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-mono text-xs p-4 text-center">
-                  <Camera className="w-8 h-8 mb-2 opacity-50" />
-                  <span>No photographic telemetry attached</span>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
 

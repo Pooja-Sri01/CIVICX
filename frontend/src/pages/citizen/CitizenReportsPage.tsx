@@ -22,7 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { ApiService } from '../../services/api';
 import { CitizenReport, CitizenReportStatus } from '../../types';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
 
 export const CitizenReportsPage: React.FC = () => {
   const { user, isCitizen } = useAuth();
@@ -318,19 +318,22 @@ export const CitizenReportsPage: React.FC = () => {
                         exit={{ opacity: 0, height: 0 }}
                         className="pt-4 border-t border-slate-100 space-y-4"
                       >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {rep.photoUrl && (
-                            <div className="h-44 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200">
+                        <div className={`grid gap-4 ${isUserUploadedPhoto(rep.photoUrl) ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+                          {isUserUploadedPhoto(rep.photoUrl) && (
+                            <div className="h-44 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 relative group">
                               <img
-                                src={getAssetImage(rep.photoUrl, rep.category)}
+                                src={rep.photoUrl}
                                 alt={rep.category}
                                 onError={(e) => handleImageError(e, rep.category)}
                                 className="w-full h-full object-cover"
                               />
+                              <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/75 text-white font-mono text-[9px]">
+                                Citizen Uploaded Evidence
+                              </div>
                             </div>
                           )}
 
-                          <div className="space-y-3 font-mono text-xs">
+                          <div className={`space-y-3 font-mono text-xs ${!isUserUploadedPhoto(rep.photoUrl) ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 space-y-0' : ''}`}>
                             <div className="p-3.5 rounded-xl bg-purple-50/60 border border-purple-100 space-y-1">
                               <span className="text-[10px] text-purple-700 font-bold block">
                                 DETERMINISTIC VALIDATION

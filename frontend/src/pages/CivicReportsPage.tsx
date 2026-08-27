@@ -37,7 +37,7 @@ import { CitizenReport, Asset, CivicReportStats, CitizenReportEvent } from '../t
 import { formatINR } from '../utils/formatters';
 import { AssetDecisionChain } from '../components/common/AssetDecisionChain';
 import { AIInspectionModal } from '../components/inspection/AIInspectionModal';
-import { getAssetImage, handleImageError } from '../utils/imageFallback';
+import { isUserUploadedPhoto, handleImageError } from '../utils/imageFallback';
 
 export const CivicReportsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -721,10 +721,10 @@ export const CivicReportsPage: React.FC = () => {
                       <span>RUN AI SCREENING</span>
                     </button>
                   </div>
-                  {selectedReport.photoUrl ? (
+                  {isUserUploadedPhoto(selectedReport.photoUrl) ? (
                     <div className="h-56 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 relative group">
                       <img
-                        src={getAssetImage(selectedReport.photoUrl, selectedReport.category)}
+                        src={selectedReport.photoUrl}
                         alt={selectedReport.category}
                         onError={(e) => handleImageError(e, selectedReport.category)}
                         className="w-full h-full object-cover"
@@ -743,8 +743,8 @@ export const CivicReportsPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs font-mono text-slate-500">
-                      No photo evidence provided
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs font-mono text-slate-500">
+                      No citizen photographic evidence attached
                     </div>
                   )}
                 </div>

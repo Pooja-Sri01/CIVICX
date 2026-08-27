@@ -27,7 +27,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 1850000, // ₹18.5 Lakhs
     priorityRank: 1,
     recommendedAction: "Full-Depth Milling & High-Modulus Bituminous Overlay",
-    image: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Severe Pothole (D40)", confidence: 0.96, x: 22, y: 48, width: 34, height: 28 },
       { label: "Alligator Cracking (D20)", confidence: 0.91, x: 60, y: 38, width: 26, height: 35 }
@@ -75,7 +75,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 4200000, // ₹42.0 Lakhs
     priorityRank: 2,
     recommendedAction: "Modular Expansion Joint Replacement & Elastomeric Bearing Rehabilitation",
-    image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Expansion Joint Fracture", confidence: 0.94, x: 15, y: 30, width: 68, height: 22 },
       { label: "Concrete Spalling (D50)", confidence: 0.88, x: 42, y: 55, width: 30, height: 25 }
@@ -121,7 +121,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 1250000, // ₹12.5 Lakhs
     priorityRank: 3,
     recommendedAction: "Reinforced Concrete Box Desilting, Jacketing & Precast Symmetrical Invert Liners",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Masonry Wall Shear Crack", confidence: 0.93, x: 30, y: 25, width: 45, height: 40 },
       { label: "Sediment Blockage (80%)", confidence: 0.97, x: 10, y: 62, width: 80, height: 30 }
@@ -166,7 +166,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 2800000, // ₹28.0 Lakhs
     priorityRank: 4,
     recommendedAction: "Polyurethane Foam Stabilization & Sub-base Slab Jacking",
-    image: "https://images.unsplash.com/photo-1590486803833-1c5dc8ddd4c8?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Longitudinal Crack (D00)", confidence: 0.92, x: 20, y: 35, width: 55, height: 30 }
     ],
@@ -210,7 +210,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 1400000, // ₹14.0 Lakhs
     priorityRank: 5,
     recommendedAction: "Micro-surfacing & Utility Re-trench Stabilization",
-    image: "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Trench Depression (D44)", confidence: 0.89, x: 18, y: 42, width: 60, height: 24 }
     ],
@@ -254,7 +254,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 2100000, // ₹21.0 Lakhs
     priorityRank: 6,
     recommendedAction: "Polymer Modified Bitumen (PMB-40) High-Shear Resurfacing",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Wheelpath Rutting (D43)", confidence: 0.94, x: 25, y: 40, width: 50, height: 35 }
     ],
@@ -298,7 +298,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 3100000, // ₹31.0 Lakhs
     priorityRank: 7,
     recommendedAction: "Riprap Scour Protection & Carbon-Fiber Pier Wrap Strengthening",
-    image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Pier Concrete Erosion", confidence: 0.89, x: 35, y: 50, width: 30, height: 30 }
     ],
@@ -342,7 +342,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 1650000, // ₹16.5 Lakhs
     priorityRank: 8,
     recommendedAction: "Pavement Joint Crack Sealing & 40mm Dense Bituminous Macadam (DBM)",
-    image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Longitudinal Seam Crack", confidence: 0.91, x: 48, y: 20, width: 12, height: 65 }
     ],
@@ -385,7 +385,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 850000, // ₹8.5 Lakhs
     priorityRank: 9,
     recommendedAction: "Masonry Headwall Rebuilding & Concrete Invert Channeling",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Culvert Headwall Spalling", confidence: 0.87, x: 20, y: 30, width: 40, height: 45 }
     ],
@@ -428,7 +428,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 920000, // ₹9.2 Lakhs
     priorityRank: 10,
     recommendedAction: "Manhole Ring Raising, Bituminous Leveling & Skid-Resistant Seal",
-    image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Manhole Depression (D44)", confidence: 0.93, x: 40, y: 45, width: 25, height: 25 }
     ],
@@ -471,7 +471,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 780000, // ₹7.8 Lakhs
     priorityRank: 11,
     recommendedAction: "Concrete Kerb Installation & Bituminous Edge Re-profiling",
-    image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Edge Ravelling", confidence: 0.86, x: 10, y: 55, width: 25, height: 30 }
     ],
@@ -514,7 +514,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 480000, // ₹4.8 Lakhs
     priorityRank: 12,
     recommendedAction: "High-Reflectivity Thermoplastic Re-striping & Tactile Warning Studs",
-    image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Faded Marking", confidence: 0.95, x: 30, y: 60, width: 40, height: 20 }
     ],
@@ -557,7 +557,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 620000, // ₹6.2 Lakhs
     priorityRank: 13,
     recommendedAction: "Fog Seal Application & Preventative Rejuvenation",
-    image: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Hairline Crack", confidence: 0.84, x: 35, y: 45, width: 30, height: 20 }
     ],
@@ -600,7 +600,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 390000, // ₹3.9 Lakhs
     priorityRank: 14,
     recommendedAction: "Hydro-Weed Clearance & Stone Masonry Pointing",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Weed Obstruction", confidence: 0.91, x: 20, y: 50, width: 50, height: 30 }
     ],
@@ -643,7 +643,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 280000, // ₹2.8 Lakhs
     priorityRank: 15,
     recommendedAction: "Paver Interlock Re-bedding & Sand Joint Refilling",
-    image: "https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [
       { label: "Dislodged Paver", confidence: 0.88, x: 45, y: 65, width: 20, height: 18 }
     ],
@@ -686,7 +686,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 350000, // ₹3.5 Lakhs
     priorityRank: 16,
     recommendedAction: "Routine High-Pressure Cleaning & Skid Testing Inspection",
-    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [],
     lastInspection: "2026-07-02",
     maintenanceHistory: [
@@ -727,7 +727,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 120000, // ₹1.2 Lakhs
     priorityRank: 17,
     recommendedAction: "Drainage Scupper Cleanout & Routine Bearing Greasing",
-    image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [],
     lastInspection: "2026-06-18",
     maintenanceHistory: [
@@ -768,7 +768,7 @@ export const INITIAL_ASSETS: Asset[] = [
     estimatedRepairCost: 80000, // ₹0.8 Lakhs
     priorityRank: 18,
     recommendedAction: "Scheduled Annual Visual Audit",
-    image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&w=1000&q=80",
+    image: "",
     detectedBBoxes: [],
     lastInspection: "2026-08-10",
     maintenanceHistory: [

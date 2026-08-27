@@ -1,111 +1,154 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Search, 
   Filter, 
+  ChevronRight, 
   Layers, 
-  ArrowRight, 
-  MapPin, 
-  SlidersHorizontal,
-  ChevronRight,
-  TrendingUp,
-  AlertCircle
+  ShieldAlert,
+  ArrowUpDown,
+  Building2,
+  Wrench,
+  MapPin
 } from 'lucide-react';
-
 import { ApiService } from '../services/api';
-import { Asset, RiskLevel } from '../types';
+import { Asset, AssetType, RiskLevel } from '../types';
 import { RiskBadge } from '../components/common/RiskBadge';
-import { formatINR, getConditionStatus } from '../utils/formatters';
-import { getAssetImage, handleImageError } from '../utils/imageFallback';
+import { ErrorState } from '../components/common/ErrorState';
+import { formatINR } from '../utils/formatters';
 
 export const AssetsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [filtered, setFiltered] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
 
-  const [search, setSearch] = useState('');
-  const [selectedType, setSelectedType] = useState('All');
-  const [selectedRisk, setSelectedRisk] = useState('All');
-  const [selectedZone, setSelectedZone] = useState('All');
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filters & Search
+  const [search, setSearch] = useState(searchParams.get('q') || '');
+  const [selectedType, setSelectedType] = useState<string>('All');
+  const [selectedRisk, setSelectedRisk] = useState<string>('All');
+  const [selectedZone, setSelectedZone] = useState<string>('All');
+  const [sortBy, setSortBy] = useState<'risk' | 'condition' | 'cost' | 'priority'>('priority');
+
+  const loadAssets = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await ApiService.getAssets();
+      setAssets(data);
+    } catch (err) {
+      console.error('Failed to load assets', err);
+      setError('Could not retrieve infrastructure assets from the server.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await ApiService.getAssets();
-        setAssets(data);
-        setFiltered(data);
-      } catch (e) {
-        console.error('Failed to load assets', e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    loadAssets();
   }, []);
 
-  useEffect(() => {
-    let list = [...assets];
-    if (selectedType !== 'All') list = list.filter((a) => a.type === selectedType);
-    if (selectedRisk !== 'All') list = list.filter((a) => a.riskLevel === selectedRisk);
-    if (selectedZone !== 'All') list = list.filter((a) => a.zone === selectedZone);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(
-        (a) =>
-          a.name.toLowerCase().includes(q) ||
-          a.assetId.toLowerCase().includes(q) ||
-          a.location.toLowerCase().includes(q)
-      );
-    }
-    setFiltered(list);
-  }, [search, selectedType, selectedRisk, selectedZone, assets]);
+  // Filter & Sort Assets
+  const filtered = assets.filter((asset) => {
+    const matchesSearch =
+      asset.name.toLowerCase().includes(search.toLowerCase()) ||
+      asset.assetId.toLowerCase().includes(search.toLowerCase()) ||
+      asset.location.toLowerCase().includes(search.toLowerCase());
+
+    const matchesType = selectedType === 'All' || asset.type === selectedType;
+    const matchesRisk = selectedRisk === 'All' || asset.riskLevel === selectedRisk;
+    const matchesZone = selectedZone === 'All' || asset.zone === selectedZone;
+
+    return matchesSearch && matchesType && matchesRisk && matchesZone;
+  }).sort((a, b) => {
+    if (sortBy === 'priority') return a.priorityRank - b.priorityRank;
+    if (sortBy === 'risk') return b.riskScore - a.riskScore;
+    if (sortBy === 'condition') return a.conditionScore - b.conditionScore;
+    if (sortBy === 'cost') return b.estimatedRepairCost - a.estimatedRepairCost;
+    return 0;
+  });
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="h-10 bg-zinc-200 animate-pulse rounded-xl w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="p-5 rounded-2xl bg-white border border-zinc-200 space-y-4 animate-pulse">
+              <div className="flex justify-between items-center">
+                <div className="h-6 w-20 bg-zinc-200 rounded" />
+                <div className="h-6 w-16 bg-zinc-200 rounded" />
+              </div>
+              <div className="h-5 w-3/4 bg-zinc-200 rounded" />
+              <div className="h-4 w-1/2 bg-zinc-200 rounded" />
+              <div className="h-16 bg-zinc-100 rounded-xl" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <ErrorState message={error} onRetry={loadAssets} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-civic-border">
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="font-display font-black text-2xl sm:text-3xl text-civic-dark tracking-tight">
-              ASSET RISK INTELLIGENCE
-            </h1>
-            <span className="bg-lime text-civic-dark text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded font-mono">
-              STAGE 3: EXPLAINABLE RISK
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-400">
+              Citywide Portfolio
             </span>
-            <span className="bg-zinc-200 text-zinc-800 text-xs font-bold font-mono px-2.5 py-0.5 rounded-full">
-              {filtered.length} Assets
+            <span className="bg-lime text-civic-dark text-[10px] font-mono font-bold px-2 py-0.5 rounded">
+              78 MONITORED ASSETS
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1 font-medium">
-            Deep 6-factor multi-criteria risk assessments, physical condition telemetry, and failure degradation models across Coimbatore.
+          <h1 className="font-display font-black text-2xl text-civic-dark tracking-tight mt-1">
+            ASSET INTELLIGENCE REGISTRY
+          </h1>
+          <p className="text-xs text-zinc-500">
+            Real-time multi-criteria telemetry, decay curves, and intervention planning.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Link
-            to="/map"
-            className="px-4 py-2 rounded-xl bg-civic-dark text-white text-xs font-semibold hover:bg-zinc-800 transition-all shadow-subtle flex items-center gap-1.5 font-mono"
+        {/* Sort selector */}
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <ArrowUpDown className="w-4 h-4 text-zinc-400" />
+          <span className="text-xs font-mono text-zinc-500">SORT BY:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="px-3 py-1.5 rounded-xl bg-white border border-zinc-200 text-xs font-semibold text-zinc-700 shadow-subtle focus:outline-none focus:ring-2 focus:ring-lime"
           >
-            <MapPin className="w-3.5 h-3.5 text-lime" />
-            <span>Switch to Map View</span>
-          </Link>
+            <option value="priority">Priority Rank (#1 to #78)</option>
+            <option value="risk">Highest Risk Score</option>
+            <option value="condition">Lowest Condition Score</option>
+            <option value="cost">Highest Estimated Cost</option>
+          </select>
         </div>
       </div>
 
-
-      {/* Filter Ribbon */}
-      <div className="glass-panel p-4 rounded-2xl border border-civic-border shadow-subtle space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      {/* Filter and Search Bar */}
+      <div className="glass-panel p-4 rounded-2xl border border-civic-border space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search */}
-          <div className="relative md:col-span-2">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <div className="relative lg:col-span-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <input
               type="text"
-              placeholder="Search by asset ID, street name, ward..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-zinc-200 text-xs text-civic-dark focus:outline-none focus:ring-2 focus:ring-lime"
+              placeholder="Search by asset ID, corridor name, road, or zone..."
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium text-zinc-800 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-lime"
             />
           </div>
 
@@ -114,30 +157,30 @@ export const AssetsPage: React.FC = () => {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full py-2 px-3 rounded-xl bg-white border border-zinc-200 text-xs text-civic-dark focus:outline-none focus:ring-2 focus:ring-lime font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-lime"
             >
               <option value="All">All Asset Types</option>
-              <option value="Road">Roads</option>
-              <option value="Bridge">Bridges</option>
-              <option value="Drainage">Drainage</option>
-              <option value="Culvert">Culverts</option>
+              <option value="Road">Roads & Corridors</option>
+              <option value="Bridge">Bridges & Structures</option>
               <option value="Flyover">Flyovers</option>
-              <option value="Traffic Corridor">Traffic Corridors</option>
+              <option value="Drainage">Stormwater Drainage</option>
+              <option value="Culvert">Culverts</option>
+              <option value="Public Facility">Public Facilities</option>
             </select>
           </div>
 
-          {/* Risk Filter */}
+          {/* Risk Level Filter */}
           <div>
             <select
               value={selectedRisk}
               onChange={(e) => setSelectedRisk(e.target.value)}
-              className="w-full py-2 px-3 rounded-xl bg-white border border-zinc-200 text-xs text-civic-dark focus:outline-none focus:ring-2 focus:ring-lime font-medium"
+              className="w-full px-3 py-2 rounded-xl bg-white border border-zinc-200 text-xs font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-lime"
             >
-              <option value="All">All Risk Levels</option>
-              <option value="Critical">Critical (76-100)</option>
-              <option value="High">High (51-75)</option>
-              <option value="Medium">Medium (26-50)</option>
-              <option value="Low">Low (0-25)</option>
+              <option value="All">All Risk Tiers</option>
+              <option value="Critical">Critical (75-100)</option>
+              <option value="High">High (50-74)</option>
+              <option value="Medium">Medium (25-49)</option>
+              <option value="Low">Low (0-24)</option>
             </select>
           </div>
         </div>
@@ -161,77 +204,76 @@ export const AssetsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid of Asset Cards */}
+      {/* Grid of Clean Data-First Asset Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filtered.map((asset) => {
-          const conditionStatus = getConditionStatus(asset.conditionScore);
           return (
             <div
               key={asset.id}
               onClick={() => navigate(`/assets/${asset.id}`)}
-              className="glass-panel rounded-2xl border border-civic-border overflow-hidden hover:shadow-card hover:-translate-y-1 transition-all cursor-pointer flex flex-col justify-between group"
+              className="glass-panel rounded-2xl border border-civic-border bg-white hover:border-zinc-300 hover:shadow-card hover:-translate-y-0.5 transition-all cursor-pointer flex flex-col justify-between group p-5 space-y-4"
             >
-              <div>
-                {/* Image & Risk Banner */}
-                <div className="relative h-40 bg-zinc-900 overflow-hidden">
-                  <img
-                    src={getAssetImage(asset.image, asset.type)}
-                    alt={asset.name}
-                    onError={(e) => handleImageError(e, asset.type)}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
-                  
-                  {/* Floating Badges */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className="bg-black/80 backdrop-blur-md text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+              <div className="space-y-3.5">
+                {/* Header: Asset ID, Type, Zone & Risk Badge */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="bg-civic-dark text-lime font-mono text-xs font-bold px-2.5 py-1 rounded-lg">
                       {asset.assetId}
                     </span>
-                    <span className="bg-white/90 text-zinc-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                    <span className="bg-zinc-100 text-zinc-800 text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border border-zinc-200">
                       {asset.type}
                     </span>
+                    <span className="text-[10px] font-mono text-zinc-400">
+                      {asset.zone}
+                    </span>
                   </div>
+                  <RiskBadge level={asset.riskLevel} score={asset.riskScore} size="sm" />
+                </div>
 
-                  <div className="absolute top-3 right-3">
-                    <RiskBadge level={asset.riskLevel} score={asset.riskScore} size="sm" />
+                {/* Primary Hero Focus: Asset Name */}
+                <div>
+                  <h3 className="font-display font-extrabold text-base sm:text-lg text-civic-dark tracking-tight leading-snug group-hover:text-lime-dark transition-colors">
+                    {asset.name}
+                  </h3>
+                  <p className="text-xs text-zinc-500 font-sans mt-1 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-zinc-400 flex-shrink-0" />
+                    <span className="truncate">{asset.location}</span>
+                  </p>
+                </div>
+
+                {/* 3-Column Metrics: Condition, Estimated Cost, Priority Rank */}
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-zinc-50 border border-zinc-100 text-xs">
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Condition</span>
+                    <p className="font-mono font-black text-sm text-zinc-900 mt-0.5">{asset.conditionScore}%</p>
                   </div>
-
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
-                    <p className="text-xs font-bold truncate drop-shadow">{asset.name}</p>
-                    <p className="text-[10px] text-zinc-300 truncate">{asset.location}</p>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Est. Cost</span>
+                    <p className="font-mono font-black text-sm text-zinc-900 mt-0.5">{formatINR(asset.estimatedRepairCost)}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono uppercase text-zinc-400 font-bold block">Priority</span>
+                    <p className="font-mono font-black text-sm text-civic-dark mt-0.5">#{asset.priorityRank}</p>
                   </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-4 space-y-3">
-                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-100">
-                    <div>
-                      <span className="text-[10px] font-mono uppercase text-zinc-400">Condition</span>
-                      <p className="font-mono font-bold text-zinc-800">{asset.conditionScore}%</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-mono uppercase text-zinc-400">Estimated Cost</span>
-                      <p className="font-mono font-bold text-zinc-800">{formatINR(asset.estimatedRepairCost)}</p>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-mono uppercase text-zinc-400">Priority Rank</span>
-                      <p className="font-mono font-bold text-civic-dark">#{asset.priorityRank}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] font-mono uppercase text-zinc-400">Identified Defect</span>
-                    <p className="text-xs font-medium text-zinc-700 truncate">{asset.damageType}</p>
-                  </div>
+                {/* Identified Defect */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+                    Identified Defect
+                  </span>
+                  <p className="text-xs font-semibold text-zinc-800 bg-amber-50/60 border border-amber-200/80 px-2.5 py-1.5 rounded-lg truncate">
+                    {asset.damageType}
+                  </p>
                 </div>
               </div>
 
-              {/* Card Footer */}
-              <div className="p-3.5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
-                <span className="text-[11px] text-zinc-500 truncate max-w-[190px]">
+              {/* Footer: Recommended Action & Inspect Button */}
+              <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                <span className="text-[11px] text-zinc-500 truncate max-w-[200px]" title={asset.recommendedAction}>
                   {asset.recommendedAction}
                 </span>
-                <span className="text-xs font-semibold text-civic-dark group-hover:text-lime-dark flex items-center gap-1">
+                <span className="text-xs font-bold text-civic-dark group-hover:text-lime-dark flex items-center gap-1 font-mono whitespace-nowrap flex-shrink-0">
                   <span>Inspect</span>
                   <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                 </span>

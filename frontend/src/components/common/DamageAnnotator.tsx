@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BoundingBox } from '../../types';
-import { Eye, EyeOff, Sparkles, CheckCircle2, Scan } from 'lucide-react';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { Eye, EyeOff, Sparkles, CheckCircle2, Scan, Cpu } from 'lucide-react';
+import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
 
 interface DamageAnnotatorProps {
   imageSrc: string;
@@ -18,6 +18,8 @@ export const DamageAnnotator: React.FC<DamageAnnotatorProps> = ({
 }) => {
   const [showBoxes, setShowBoxes] = useState(true);
   const [activeBox, setActiveBox] = useState<number | null>(null);
+
+  const hasPhoto = isUserUploadedPhoto(imageSrc);
 
   return (
     <div className="rounded-2xl border border-civic-border bg-white overflow-hidden shadow-subtle">
@@ -37,83 +39,85 @@ export const DamageAnnotator: React.FC<DamageAnnotatorProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowBoxes(!showBoxes)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-100 transition-colors"
-          >
-            {showBoxes ? (
-              <>
-                <EyeOff className="w-3 h-3 text-zinc-500" />
-                <span>Hide Bounding Boxes</span>
-              </>
-            ) : (
-              <>
-                <Eye className="w-3 h-3 text-zinc-500" />
-                <span>Show Bounding Boxes</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Image with bounding box annotations */}
-      <div className="relative bg-zinc-900 overflow-hidden group aspect-[16/10] sm:aspect-[16/9]">
-        <img
-          src={getAssetImage(imageSrc, damageType)}
-          alt="Infrastructure Damage Inspection"
-          onError={(e) => handleImageError(e, damageType)}
-          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
-        />
-
-        {showBoxes &&
-          bboxes.map((box, idx) => (
-            <div
-              key={idx}
-              onMouseEnter={() => setActiveBox(idx)}
-              onMouseLeave={() => setActiveBox(null)}
-              style={{
-                left: `${box.x}%`,
-                top: `${box.y}%`,
-                width: `${box.width}%`,
-                height: `${box.height}%`,
-              }}
-              className={`absolute border-2 transition-all cursor-pointer ${
-                activeBox === idx
-                  ? 'border-lime bg-lime/20 shadow-lime-glow z-20'
-                  : 'border-red-500 bg-red-500/10 z-10'
-              }`}
+        {hasPhoto && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowBoxes(!showBoxes)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-zinc-200 text-xs font-medium text-zinc-700 hover:bg-zinc-100 transition-colors"
             >
-              {/* Tag Label */}
-              <div className="absolute -top-6 left-0 bg-civic-dark text-white text-[10px] font-mono px-2 py-0.5 rounded shadow flex items-center gap-1 whitespace-nowrap">
-                <span className="w-1.5 h-1.5 rounded-full bg-lime" />
-                <span>{box.label}</span>
-                <span className="text-lime font-bold">
-                  {Math.round(box.confidence * 100)}%
-                </span>
-              </div>
-            </div>
-          ))}
-
-        {/* Floating AI Scan Status Indicator */}
-        <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-lime" />
-          <span className="font-medium text-[11px]">
-            {bboxes.length > 0
-              ? `${bboxes.length} Structural Defect(s) Isolated`
-              : 'Nominal Profile — No Critical Defects Isolated'}
-          </span>
-        </div>
+              {showBoxes ? (
+                <>
+                  <EyeOff className="w-3 h-3 text-zinc-500" />
+                  <span>Hide Bounding Boxes</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3 h-3 text-zinc-500" />
+                  <span>Show Bounding Boxes</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Image with bounding box annotations if real photo exists */}
+      {hasPhoto && (
+        <div className="relative bg-zinc-900 overflow-hidden group aspect-[16/10] sm:aspect-[16/9]">
+          <img
+            src={imageSrc}
+            alt="Infrastructure Damage Inspection"
+            onError={(e) => handleImageError(e, damageType)}
+            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-[1.02]"
+          />
+
+          {showBoxes &&
+            bboxes.map((box, idx) => (
+              <div
+                key={idx}
+                onMouseEnter={() => setActiveBox(idx)}
+                onMouseLeave={() => setActiveBox(null)}
+                style={{
+                  left: `${box.x}%`,
+                  top: `${box.y}%`,
+                  width: `${box.width}%`,
+                  height: `${box.height}%`,
+                }}
+                className={`absolute border-2 transition-all cursor-pointer ${
+                  activeBox === idx
+                    ? 'border-lime bg-lime/20 shadow-lime-glow z-20'
+                    : 'border-red-500 bg-red-500/10 z-10'
+                }`}
+              >
+                <div className="absolute -top-6 left-0 bg-civic-dark text-white text-[10px] font-mono px-2 py-0.5 rounded shadow flex items-center gap-1 whitespace-nowrap">
+                  <span className="w-1.5 h-1.5 rounded-full bg-lime" />
+                  <span>{box.label}</span>
+                  <span className="text-lime font-bold">
+                    {Math.round(box.confidence * 100)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+
+          <div className="absolute bottom-3 left-3 bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs px-3 py-1.5 rounded-xl flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-lime" />
+            <span className="font-medium text-[11px]">
+              {bboxes.length > 0
+                ? `${bboxes.length} Structural Defect(s) Isolated`
+                : 'Nominal Profile — No Critical Defects Isolated'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Defect Summary Footer */}
       <div className="p-4 bg-white border-t border-civic-border">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase text-zinc-500 tracking-wider">
+            <p className="text-[11px] font-semibold uppercase text-zinc-500 tracking-wider font-mono">
               Primary Identified Defect
             </p>
-            <p className="text-sm font-semibold text-civic-dark">{damageType}</p>
+            <p className="text-sm font-bold text-civic-dark">{damageType}</p>
           </div>
 
           <div className="flex items-center gap-3">

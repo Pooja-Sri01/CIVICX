@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { Asset, CitizenReport } from '../../types';
 import { formatINR } from '../../utils/formatters';
 import { AssetDecisionChain } from '../common/AssetDecisionChain';
-import { getAssetImage, handleImageError } from '../../utils/imageFallback';
+import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
 
 interface GoogleMapViewProps {
   assets: Asset[];
@@ -890,17 +890,17 @@ export const GoogleMapView: React.FC<GoogleMapViewProps> = ({
                 </div>
               </div>
 
-              {/* Photo Preview if exists */}
-              {selectedReport.photoUrl && (
+              {/* Photo Preview if genuine user uploaded evidence exists */}
+              {isUserUploadedPhoto(selectedReport.photoUrl) && (
                 <div className="relative h-44 rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-900">
                   <img
-                    src={getAssetImage(selectedReport.photoUrl, selectedReport.category)}
+                    src={selectedReport.photoUrl}
                     alt={selectedReport.category}
                     onError={(e) => handleImageError(e, selectedReport.category)}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-sm text-white font-mono text-[10px]">
-                    Photo Telemetry Verified
+                    Citizen Uploaded Evidence
                   </div>
                 </div>
               )}
