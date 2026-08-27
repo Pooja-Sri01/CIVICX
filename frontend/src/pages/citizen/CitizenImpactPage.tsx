@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { ApiService } from '../../services/api';
 import { CitizenImpact } from '../../types';
 
@@ -51,8 +50,6 @@ export const CitizenImpactPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col pb-16">
-      <CitizenNavbar />
-
       <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-8 font-sans">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto space-y-2">

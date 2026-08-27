@@ -17,7 +17,6 @@ import {
   X,
   Image as ImageIcon
 } from 'lucide-react';
-import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { LocationPickerMap } from '../../components/citizen/LocationPickerMap';
 import { ApiService } from '../../services/api';
 import { CitizenReport } from '../../types';
@@ -101,8 +100,6 @@ export const CitizenReportPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-canvas pb-16">
-      <CitizenNavbar />
-
       <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto space-y-2 mb-8">

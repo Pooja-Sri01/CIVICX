@@ -18,7 +18,6 @@ import {
   Layers,
   ChevronRight
 } from 'lucide-react';
-import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { ApiService } from '../../services/api';
 import { CitizenReport, CitizenReportStatus } from '../../types';
 import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
@@ -53,7 +52,6 @@ export const CitizenReportDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col">
-        <CitizenNavbar />
         <div className="max-w-4xl mx-auto w-full py-16 px-4 space-y-6">
           <div className="h-8 bg-slate-200 rounded-xl animate-pulse w-48" />
           <div className="h-64 bg-white rounded-3xl border border-slate-200 p-8 animate-pulse" />
@@ -65,7 +63,6 @@ export const CitizenReportDetailPage: React.FC = () => {
   if (error || !report) {
     return (
       <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col">
-        <CitizenNavbar />
         <div className="max-w-xl mx-auto w-full py-16 px-4 text-center space-y-4">
           <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto">
             <AlertTriangle className="w-8 h-8" />
@@ -107,8 +104,6 @@ export const CitizenReportDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col">
-      <CitizenNavbar />
-
       <main className="flex-1 max-w-5xl mx-auto w-full py-8 sm:py-12 px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">

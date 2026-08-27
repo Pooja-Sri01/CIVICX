@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Trophy, Award, Shield, EyeOff, Sparkles, Coins, CheckCircle2, ShieldCheck } from 'lucide-react';
-import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { ApiService } from '../../services/api';
 import { CitizenLeaderboardItem } from '../../types';
 
@@ -22,8 +21,6 @@ export const CitizenLeaderboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col">
-      <CitizenNavbar />
-
       <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full space-y-8">
         {/* Header Title */}
         <div className="text-center max-w-2xl mx-auto space-y-2">

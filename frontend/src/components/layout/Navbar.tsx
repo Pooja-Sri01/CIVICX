@@ -17,13 +17,22 @@ import {
   ListTodo,
   Camera,
   Trophy,
-  Coins
+  Coins,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../../context/AuthContext';
 
 interface NavbarProps {
   onOpenCopilot?: () => void;
+}
+
+interface NavItem {
+  label: string;
+  shortLabel: string;
+  path: string;
+  icon: any;
+  aliases?: string[];
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
@@ -33,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
   const { user, isAuthenticated, isCitizen, isMunicipal, logout } = useAuth();
 
   // Municipal Navigation Links with responsive short/full labels
-  const municipalNavItems = [
+  const municipalNavItems: NavItem[] = [
     { label: 'Command Center', shortLabel: 'Command', path: '/dashboard', icon: LayoutDashboard },
     { label: 'GIS Risk Map', shortLabel: 'GIS Map', path: '/map', icon: Map },
     { label: 'Asset Intelligence', shortLabel: 'Assets', path: '/assets', icon: Layers },
@@ -45,16 +54,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
   ];
 
   // Citizen Navigation Links
-  const citizenNavItems = [
-    { label: 'Citizen Home', shortLabel: 'Home', path: '/citizen/portal', icon: User },
-    { label: 'Report Defect', shortLabel: 'Report', path: '/citizen/report', icon: Camera },
-    { label: 'My Complaints', shortLabel: 'Complaints', path: '/citizen/my-reports', icon: FileText },
-    { label: 'Rewards & Wallet', shortLabel: 'Rewards', path: '/citizen/rewards', icon: Coins },
-    { label: 'Leaderboard', shortLabel: 'Rankings', path: '/citizen/leaderboard', icon: Trophy },
-    { label: 'City Map', shortLabel: 'Map', path: '/map', icon: Map },
+  const citizenNavItems: NavItem[] = [
+    { label: 'Citizen Home', shortLabel: 'Home', path: '/citizen/portal', aliases: ['/citizen', '/citizen/portal'], icon: User },
+    { label: 'Report Defect', shortLabel: 'Report', path: '/citizen/report', aliases: ['/citizen/report'], icon: Camera },
+    { label: 'My Complaints', shortLabel: 'Complaints', path: '/citizen/my-reports', aliases: ['/citizen/my-reports', '/citizen/reports'], icon: FileText },
+    { label: 'Rewards & Wallet', shortLabel: 'Rewards', path: '/citizen/rewards', aliases: ['/citizen/rewards'], icon: Coins },
+    { label: 'Leaderboard', shortLabel: 'Rankings', path: '/citizen/leaderboard', aliases: ['/citizen/leaderboard'], icon: Trophy },
+    { label: 'Impact', shortLabel: 'Impact', path: '/citizen/impact', aliases: ['/citizen/impact'], icon: Activity },
+    { label: 'City Map', shortLabel: 'Map', path: '/map', aliases: ['/map'], icon: Map },
   ];
 
   const activeNavItems = isCitizen ? citizenNavItems : municipalNavItems;
+
+  const isItemActive = (item: NavItem, isRouterActive: boolean) => {
+    if (isRouterActive) return true;
+    if (item.aliases && item.aliases.some(a => location.pathname === a || location.pathname.startsWith(a + '/'))) {
+      return true;
+    }
+    return false;
+  };
 
   const handleSignOut = () => {
     logout();
@@ -106,13 +124,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    className={({ isActive }) =>
-                      `flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-lg text-[11px] xl:text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
-                        isActive
+                    className={({ isActive }) => {
+                      const active = isItemActive(item, isActive);
+                      return `flex items-center gap-1 xl:gap-1.5 px-2 xl:px-2.5 py-1.5 rounded-lg text-[11px] xl:text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                        active
                           ? 'bg-civic-dark text-lime shadow-sm'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`
-                    }
+                      }`;
+                    }}
                   >
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                     <span className="hidden xl:inline whitespace-nowrap">{item.label}</span>
@@ -122,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
               })}
             </nav>
           ) : (
-            <nav className="hidden md:flex items-center space-x-6 text-xs font-bold uppercase tracking-wider text-slate-600 font-mono">
+            <nav className="hidden md:flex items-center space-x-5 lg:space-x-6 text-xs font-bold uppercase tracking-wider text-slate-600 font-mono">
               <Link to="/map" className="hover:text-civic-dark transition-colors flex items-center gap-1.5 whitespace-nowrap">
                 <Map className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                 <span>GIS Map</span>
@@ -138,6 +157,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
               <Link to="/citizen/rewards" className="hover:text-civic-dark transition-colors flex items-center gap-1.5 whitespace-nowrap">
                 <Coins className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                 <span>Rewards</span>
+              </Link>
+              <Link to="/citizen/impact" className="hover:text-civic-dark transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                <Activity className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>Impact</span>
               </Link>
             </nav>
           )}
@@ -226,13 +249,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCopilot }) => {
                     key={item.path}
                     to={item.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
-                        isActive
+                    className={({ isActive }) => {
+                      const active = isItemActive(item, isActive);
+                      return `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
+                        active
                           ? 'bg-civic-dark text-lime font-bold'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                      }`
-                    }
+                      }`;
+                    }}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>

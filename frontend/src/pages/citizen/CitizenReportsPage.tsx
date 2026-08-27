@@ -19,7 +19,6 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { CitizenNavbar } from '../../components/citizen/CitizenNavbar';
 import { ApiService } from '../../services/api';
 import { CitizenReport, CitizenReportStatus } from '../../types';
 import { isUserUploadedPhoto, handleImageError } from '../../utils/imageFallback';
@@ -72,8 +71,6 @@ export const CitizenReportsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#EDEEF5] text-slate-900 flex flex-col">
-      <CitizenNavbar />
-
       <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-8">
         {/* Header Title & CTA */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
